@@ -68,15 +68,7 @@ function Workspace() {
   // Auto-derive alias from title until the user edits alias manually
   useEffect(() => {
     if (aliasTouched) return;
-    const slug = title
-      .toLowerCase()
-      .normalize("NFKD")
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .slice(0, 24);
-    setAlias(slug);
+    setAlias(makeShortAlias(title));
   }, [title, aliasTouched]);
 
   const filtered = useMemo(() => {
@@ -133,11 +125,10 @@ function Workspace() {
     }
     setStatus({ kind: "saving" });
     try {
-      let finalShort = shortUrl;
-      if (!finalShort) {
-        const res = await shorten({ data: { url: dest, alias: alias.trim() } });
-        finalShort = res.shortUrl;
-      }
+      // Always mint a fresh short link on save so the record is guaranteed complete
+      const res = await shorten({ data: { url: dest, alias: alias.trim() } });
+      const finalShort = res.shortUrl;
+      setShortUrl(finalShort);
       const entry: Entry = {
         id: crypto.randomUUID(),
         title: title.trim(),
