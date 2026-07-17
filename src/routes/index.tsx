@@ -878,13 +878,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
           {label}
-          {required && <span className="ml-1 text-primary">*</span>}
+          {required && <span className="ml-1 text-amber-500">*</span>}
         </span>
         {hint && (
-          <span className="font-mono text-[10px] text-muted-foreground/70">
+          <span className="font-mono text-[9px] font-medium text-stone-500">
             {hint}
           </span>
         )}
