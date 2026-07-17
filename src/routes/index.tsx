@@ -74,6 +74,9 @@ function Workspace() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [query, setQuery] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [copyFormat, setCopyFormat] = useState<"json" | "csv" | "markdown" | "text" | "html">("json");
+  const [flash, setFlash] = useState<string | null>(null);
 
   useEffect(() => {
     setEntries(loadEntries());
@@ -100,6 +103,88 @@ function Workspace() {
         .includes(q),
     );
   }, [entries, query]);
+
+  const selectedEntries = useMemo(
+    () => filtered.filter((e) => selected.has(e.id)),
+    [filtered, selected],
+  );
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((e) => selected.has(e.id));
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((e) => e.id)));
+    }
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function formatEntries(list: Entry[], fmt: typeof copyFormat): string {
+    if (list.length === 0) return "";
+    if (fmt === "json") return JSON.stringify(list, null, 2);
+    if (fmt === "csv") {
+      const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
+      const head = ["title", "alias", "image", "destination", "shortUrl"].join(",");
+      const rows = list.map((e) =>
+        [e.title, e.alias, e.image, e.destination, e.shortUrl].map(esc).join(","),
+      );
+      return [head, ...rows].join("\n");
+    }
+    if (fmt === "markdown") {
+      const head = "| Title | Alias | Short | Destination | Image |\n|---|---|---|---|---|";
+      const rows = list.map(
+        (e) =>
+          `| ${e.title} | \`${e.alias}\` | ${e.shortUrl} | ${e.destination} | ${e.image} |`,
+      );
+      return [head, ...rows].join("\n");
+    }
+    if (fmt === "html") {
+      return list
+        .map(
+          (e) =>
+            `<a href="${e.shortUrl}" data-alias="${e.alias}" data-image="${e.image}" data-destination="${e.destination}">${e.title}</a>`,
+        )
+        .join("\n");
+    }
+    // text
+    return list
+      .map(
+        (e) =>
+          `Title: ${e.title}\nAlias: ${e.alias}\nImage: ${e.image}\nDestination: ${e.destination}\nShort: ${e.shortUrl}`,
+      )
+      .join("\n\n---\n\n");
+  }
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus({ kind: "success", message: `${label} copied` });
+      setFlash(label);
+      window.setTimeout(() => setFlash((f) => (f === label ? null : f)), 1400);
+    } catch {
+      setStatus({ kind: "error", message: "Clipboard blocked" });
+    }
+  }
+
+  function copyOne(e: Entry) {
+    copyText(formatEntries([e], copyFormat), `Entry · ${copyFormat.toUpperCase()}`);
+  }
+  function copySelected() {
+    const list = selectedEntries.length ? selectedEntries : filtered;
+    if (list.length === 0) return;
+    copyText(formatEntries(list, copyFormat), `${list.length} × ${copyFormat.toUpperCase()}`);
+  }
 
   function resetForm() {
     setTitle("");
@@ -173,9 +258,7 @@ function Workspace() {
   }
 
   function copy(text: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      setStatus({ kind: "success", message: "Copied to clipboard" });
-    });
+    copyText(text, "Value");
   }
 
   function exportJson() {
@@ -389,11 +472,19 @@ function Workspace() {
 
           {/* Vault */}
           <section className="rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Vault <span className="ml-1 font-mono text-xs text-muted-foreground">· {filtered.length}</span></h2>
+                <h2 className="text-lg font-semibold">
+                  Vault
+                  <span className="ml-2 font-mono text-xs text-muted-foreground">
+                    · {filtered.length}
+                    {selected.size > 0 && (
+                      <span className="ml-1 text-primary">/ {selected.size} picked</span>
+                    )}
+                  </span>
+                </h2>
                 <p className="text-xs text-muted-foreground">
-                  Saved locally to this browser
+                  Select rows → pick a format → copy the whole payload
                 </p>
               </div>
               <input
@@ -403,6 +494,60 @@ function Workspace() {
                 className="input h-9 w-40 text-sm"
               />
             </div>
+
+            {/* Bulk toolbar */}
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-background/40 p-2">
+              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAll}
+                  disabled={filtered.length === 0}
+                  className="accent-primary"
+                />
+                <span className="font-mono uppercase tracking-widest">
+                  {allVisibleSelected ? "Unselect all" : "Select all"}
+                </span>
+              </label>
+              <div className="mx-1 h-5 w-px bg-border" />
+              <div className="flex items-center gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
+                {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setCopyFormat(f)}
+                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
+                      copyFormat === f
+                        ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={copySelected}
+                disabled={filtered.length === 0}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-[image:var(--gradient-hero)] px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:brightness-110 disabled:opacity-40"
+              >
+                <span aria-hidden>⧉</span>
+                Copy {selected.size > 0 ? `${selected.size}` : "all"} as {copyFormat.toUpperCase()}
+              </button>
+              {selected.size > 0 && (
+                <button
+                  onClick={clearSelection}
+                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {flash && (
+              <div className="mb-3 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-primary">
+                ✓ {flash} copied to clipboard
+              </div>
+            )}
 
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-16 text-center">
@@ -420,9 +565,20 @@ function Workspace() {
                 {filtered.map((e) => (
                   <li
                     key={e.id}
-                    className="group rounded-xl border border-border bg-background/60 p-4 transition hover:border-primary/40"
+                    className={`group rounded-xl border p-4 transition ${
+                      selected.has(e.id)
+                        ? "border-primary/70 bg-primary/5 shadow-[0_0_0_1px_var(--color-primary)]/0"
+                        : "border-border bg-background/60 hover:border-primary/40"
+                    }`}
                   >
                     <div className="flex gap-4">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(e.id)}
+                        onChange={() => toggleSelect(e.id)}
+                        className="mt-1 h-4 w-4 accent-primary"
+                        aria-label={`Select ${e.title}`}
+                      />
                       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
                         {e.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -465,24 +621,45 @@ function Workspace() {
                         >
                           → {e.destination}
                         </div>
-                        <div className="mt-2 flex items-center gap-2 text-xs">
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                          <button
+                            onClick={() => copyOne(e)}
+                            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 font-medium text-primary transition hover:bg-primary/20"
+                            title={`Copy all fields as ${copyFormat.toUpperCase()}`}
+                          >
+                            ⧉ Copy all
+                          </button>
                           <button
                             onClick={() => copy(e.shortUrl)}
-                            className="rounded border border-border px-2 py-0.5 text-muted-foreground hover:border-primary/60 hover:text-primary"
+                            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
                           >
-                            Copy short
+                            Short
                           </button>
                           <button
-                            onClick={() =>
-                              copy(JSON.stringify(e, null, 2))
-                            }
-                            className="rounded border border-border px-2 py-0.5 text-muted-foreground hover:border-primary/60 hover:text-primary"
+                            onClick={() => copy(e.destination)}
+                            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
                           >
-                            Copy JSON
+                            Dest
                           </button>
+                          {e.image && (
+                            <button
+                              onClick={() => copy(e.image)}
+                              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+                            >
+                              Image
+                            </button>
+                          )}
+                          {e.alias && (
+                            <button
+                              onClick={() => copy(e.alias)}
+                              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+                            >
+                              Alias
+                            </button>
+                          )}
                           <button
                             onClick={() => deleteEntry(e.id)}
-                            className="ml-auto rounded px-2 py-0.5 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+                            className="ml-auto rounded-md px-2 py-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
                           >
                             Delete
                           </button>
