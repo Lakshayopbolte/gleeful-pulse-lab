@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { shortenUrl } from "@/lib/shorten.functions";
+import { searchImages, type ImageHit } from "@/lib/image-search.functions";
 
 export const Route = createFileRoute("/")({
   component: Workspace,
@@ -56,6 +57,7 @@ function saveEntries(entries: Entry[]) {
 
 function Workspace() {
   const shorten = useServerFn(shortenUrl);
+  const runImageSearch = useServerFn(searchImages);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
@@ -77,6 +79,40 @@ function Workspace() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [copyFormat, setCopyFormat] = useState<"json" | "csv" | "markdown" | "text" | "html">("json");
   const [flash, setFlash] = useState<string | null>(null);
+
+  const [imgQuery, setImgQuery] = useState("");
+  const [imgResults, setImgResults] = useState<ImageHit[]>([]);
+  const [imgSearching, setImgSearching] = useState(false);
+  const [imgError, setImgError] = useState<string | null>(null);
+  const [imgPanelOpen, setImgPanelOpen] = useState(false);
+
+  async function handleImageSearch() {
+    const q = (imgQuery.trim() || title.trim());
+    if (!q) {
+      setImgError("Type something or fill the title first");
+      return;
+    }
+    setImgError(null);
+    setImgSearching(true);
+    setImgPanelOpen(true);
+    try {
+      const res = await runImageSearch({ data: { q } });
+      setImgResults(res.results);
+      if (res.results.length === 0) setImgError("No images found");
+    } catch (err) {
+      setImgError(err instanceof Error ? err.message : "Search failed");
+    } finally {
+      setImgSearching(false);
+    }
+  }
+
+  function pickImage(hit: ImageHit) {
+    setImage(hit.url);
+    if (!title.trim()) setTitle(hit.title);
+    setImgPanelOpen(false);
+    setFlash("Image linked");
+    window.setTimeout(() => setFlash((f) => (f === "Image linked" ? null : f)), 1400);
+  }
 
   useEffect(() => {
     setEntries(loadEntries());
@@ -384,14 +420,106 @@ function Workspace() {
                   />
                 </Field>
                 <Field label="Image link">
-                  <input
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="https://…/cover.jpg"
-                    className="input"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                      placeholder="https://…/cover.jpg  or  search →"
+                      className="input flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setImgPanelOpen((v) => !v)}
+                      className="whitespace-nowrap rounded-md border border-border bg-secondary px-3 text-sm font-medium text-secondary-foreground transition hover:border-primary/60 hover:text-primary"
+                      title="Search images"
+                    >
+                      🔍
+                    </button>
+                  </div>
                 </Field>
               </div>
+
+              {imgPanelOpen && (
+                <div className="rounded-xl border border-border bg-background/40 p-3">
+                  <div className="mb-2 flex gap-2">
+                    <input
+                      value={imgQuery}
+                      onChange={(e) => setImgQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleImageSearch();
+                        }
+                      }}
+                      placeholder={title ? `Search images (default: “${title}”)` : "Search images…"}
+                      className="input flex-1"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleImageSearch}
+                      disabled={imgSearching}
+                      className="rounded-md bg-[image:var(--gradient-hero)] px-4 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:brightness-110 disabled:opacity-40"
+                    >
+                      {imgSearching ? "…" : "Search"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImgPanelOpen(false)}
+                      className="rounded-md border border-border px-3 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                    Click any tile to grab its image link {title || imgQuery ? "& title" : ""}
+                  </div>
+                  {imgError && (
+                    <p className="mb-2 text-xs text-destructive-foreground">{imgError}</p>
+                  )}
+                  {imgSearching ? (
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="aspect-square animate-pulse rounded-md border border-border bg-secondary/60"
+                        />
+                      ))}
+                    </div>
+                  ) : imgResults.length > 0 ? (
+                    <div className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+                      {imgResults.map((hit) => (
+                        <button
+                          key={hit.id}
+                          type="button"
+                          onClick={() => pickImage(hit)}
+                          title={hit.title}
+                          className="group relative aspect-square overflow-hidden rounded-md border border-border bg-secondary transition hover:border-primary hover:shadow-[var(--shadow-glow)]"
+                        >
+                          <img
+                            src={hit.thumbnail}
+                            alt={hit.title}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition group-hover:scale-105"
+                            onError={(ev) => {
+                              (ev.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                            }}
+                          />
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-background/95 to-transparent px-1.5 py-1 text-left text-[10px] text-foreground opacity-0 transition group-hover:opacity-100">
+                            {hit.title}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    !imgError && (
+                      <p className="py-6 text-center text-xs text-muted-foreground">
+                        Type a query and hit Search — results come from Openverse (free, CC-licensed).
+                      </p>
+                    )
+                  )}
+                </div>
+              )}
 
               <Field label="Destination link" required>
                 <div className="flex gap-2">
