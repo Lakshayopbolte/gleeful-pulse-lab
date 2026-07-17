@@ -45,7 +45,7 @@ function Workspace() {
   const state = Route.useLoaderData();
 
   if (!state.unlocked) {
-    return <UnlockScreen onUnlocked={() => router.invalidate()} />;
+    return <UnlockScreen onUnlocked={async () => router.invalidate()} />;
   }
 
   return <WorkspaceInner initialEntries={state.entries} user={state.user} />;
@@ -898,7 +898,7 @@ function Field({
   );
 }
 
-function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
   const unlockFn = useServerFn(unlockSite);
   const [username, setUsername] = useState("Lakshay");
   const [password, setPassword] = useState("");
@@ -916,11 +916,12 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
     try {
       const res = await unlockFn({ data: { username: username.trim(), password } });
       if (!res.ok) {
-        setError("Wrong password");
+        setError("Password is wrong. Use the vault password, not the username.");
         setBusy(false);
         return;
       }
-      onUnlocked();
+      await onUnlocked();
+      window.location.replace(window.location.pathname);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
       setBusy(false);
@@ -987,7 +988,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
           {busy ? "Unlocking…" : "Unlock vault"}
         </button>
         <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-500">
-          Session persists 30 days on any browser
+          Username is Lakshay · enter your vault password
         </p>
       </form>
     </div>
