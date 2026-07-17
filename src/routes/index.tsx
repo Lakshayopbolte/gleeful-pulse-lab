@@ -11,6 +11,10 @@ import {
   lockSite,
   saveLink,
   deleteLink,
+  getTrash,
+  restoreLink,
+  purgeLink,
+  emptyTrash,
   type LinkEntry,
 } from "@/lib/gate.functions";
 
@@ -48,15 +52,23 @@ function Workspace() {
     return <UnlockScreen onUnlocked={async () => router.invalidate()} />;
   }
 
-  return <WorkspaceInner initialEntries={state.entries} user={state.user} />;
+  return (
+    <WorkspaceInner
+      initialEntries={state.entries}
+      user={state.user}
+      initialTrashCount={state.trashCount ?? 0}
+    />
+  );
 }
 
 function WorkspaceInner({
   initialEntries,
   user,
+  initialTrashCount,
 }: {
   initialEntries: Entry[];
   user: string;
+  initialTrashCount: number;
 }) {
   const router = useRouter();
   const shorten = useServerFn(shortenUrl);
@@ -64,6 +76,10 @@ function WorkspaceInner({
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
   const lockFn = useServerFn(lockSite);
+  const getTrashFn = useServerFn(getTrash);
+  const restoreLinkFn = useServerFn(restoreLink);
+  const purgeLinkFn = useServerFn(purgeLink);
+  const emptyTrashFn = useServerFn(emptyTrash);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
@@ -92,6 +108,33 @@ function WorkspaceInner({
   const [imgPanelOpen, setImgPanelOpen] = useState(false);
   const [qrOpenFor, setQrOpenFor] = useState<string | null>(null);
   const [density, setDensity] = useState<"grid" | "list">("grid");
+
+  // Trash / archive
+  const [view, setView] = useState<"vault" | "trash">("vault");
+  const [trashCount, setTrashCount] = useState<number>(initialTrashCount);
+  const [trashEntries, setTrashEntries] = useState<Entry[]>([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+
+  // Duplicate detection
+  const [dupWarning, setDupWarning] = useState<Entry | null>(null);
+
+  async function loadTrash() {
+    setTrashLoading(true);
+    try {
+      const list = await getTrashFn();
+      setTrashEntries(list);
+      setTrashCount(list.length);
+    } catch {
+      setStatus({ kind: "error", message: "Couldn't load trash" });
+    } finally {
+      setTrashLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (view === "trash") loadTrash();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   // Keyboard shortcuts: ⌘/Ctrl+K → focus search, ⌘/Ctrl+Enter → save, Esc → close panels
   useEffect(() => {
@@ -300,6 +343,17 @@ function WorkspaceInner({
       setStatus({ kind: "error", message: "Title and destination are required" });
       return;
     }
+    // Duplicate detection — same destination already in vault
+    const norm = dest.replace(/\/+$/, "").toLowerCase();
+    const dup = entries.find(
+      (e) => e.destination.replace(/\/+$/, "").toLowerCase() === norm,
+    );
+    if (dup && dupWarning?.id !== dup.id) {
+      setDupWarning(dup);
+      setStatus({ kind: "error", message: "Duplicate — click Save again to add anyway" });
+      return;
+    }
+    setDupWarning(null);
     setStatus({ kind: "saving" });
     try {
       // Always mint a fresh short link on save so the record is guaranteed complete
@@ -329,11 +383,59 @@ function WorkspaceInner({
   async function deleteEntry(id: string) {
     const prev = entries;
     setEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => c + 1);
     try {
       await deleteLinkFn({ data: { id } });
+      setFlash("Moved to trash");
+      window.setTimeout(() => setFlash((f) => (f === "Moved to trash" ? null : f)), 1400);
     } catch {
       setEntries(prev);
+      setTrashCount((c) => Math.max(0, c - 1));
       setStatus({ kind: "error", message: "Failed to delete" });
+    }
+  }
+
+  async function restoreEntry(id: string) {
+    const target = trashEntries.find((e) => e.id === id);
+    setTrashEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => Math.max(0, c - 1));
+    try {
+      const restored = await restoreLinkFn({ data: { id } });
+      setEntries((prev) => [restored, ...prev]);
+    } catch {
+      if (target) setTrashEntries((p) => [target, ...p]);
+      setTrashCount((c) => c + 1);
+      setStatus({ kind: "error", message: "Failed to restore" });
+    }
+  }
+
+  async function purgeEntry(id: string) {
+    const target = trashEntries.find((e) => e.id === id);
+    setTrashEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => Math.max(0, c - 1));
+    try {
+      await purgeLinkFn({ data: { id } });
+    } catch {
+      if (target) setTrashEntries((p) => [target, ...p]);
+      setTrashCount((c) => c + 1);
+      setStatus({ kind: "error", message: "Couldn't permanently delete" });
+    }
+  }
+
+  async function handleEmptyTrash() {
+    if (trashEntries.length === 0) return;
+    if (!window.confirm(`Permanently delete ${trashEntries.length} item(s)? This cannot be undone.`)) return;
+    const prev = trashEntries;
+    setTrashEntries([]);
+    setTrashCount(0);
+    try {
+      await emptyTrashFn();
+      setFlash("Trash emptied");
+      window.setTimeout(() => setFlash((f) => (f === "Trash emptied" ? null : f)), 1400);
+    } catch {
+      setTrashEntries(prev);
+      setTrashCount(prev.length);
+      setStatus({ kind: "error", message: "Couldn't empty trash" });
     }
   }
 
@@ -363,44 +465,58 @@ function WorkspaceInner({
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-border/70 glass-panel sticky top-0 z-20">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[image:var(--gradient-hero)] text-primary-foreground shadow-[var(--shadow-glow)]">
-              <span className="font-display text-xl font-bold">F</span>
-              <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-accent ring-2 ring-background pulse-dot" />
+      <header className="apple-nav sticky top-0 z-30">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-6">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-[7px] bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-[0_0_0_0.5px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.35)]">
+              <span className="font-display text-[13px] font-black tracking-tight">F</span>
             </div>
-            <div className="leading-tight">
-              <div className="font-display text-lg font-bold tracking-tight">
-                FREEKITAAB
-              </div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                Link Workspace
-              </div>
-            </div>
-          </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              {entries.length} saved
+            <span className="apple-title text-[15px] font-semibold tracking-[-0.01em] text-white/95">
+              FREEKITAAB
             </span>
+          </div>
+
+          {/* Segmented control — Apple-style */}
+          <div className="apple-segment ml-4">
+            <button
+              onClick={() => setView("vault")}
+              className={`segment ${view === "vault" ? "segment-active" : ""}`}
+            >
+              Vault
+              <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+                {entries.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setView("trash")}
+              className={`segment ${view === "trash" ? "segment-active" : ""}`}
+            >
+              Trash
+              {trashCount > 0 && (
+                <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+                  {trashCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
             {user && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-amber-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              <span className="apple-pill hidden sm:inline-flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {user}
               </span>
             )}
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
-              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/60 hover:text-primary hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0"
+              className="apple-btn"
+              title="Export JSON"
             >
-              Export JSON
+              Export
             </button>
-            <button
-              onClick={handleLock}
-              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-red-500/60 hover:text-red-400"
-            >
+            <button onClick={handleLock} className="apple-btn apple-btn-danger" title="Lock vault">
               Lock
             </button>
           </div>
@@ -408,6 +524,19 @@ function WorkspaceInner({
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-10">
+        {view === "trash" ? (
+          <TrashPanel
+            entries={trashEntries}
+            loading={trashLoading}
+            onRestore={restoreEntry}
+            onPurge={purgeEntry}
+            onEmpty={handleEmptyTrash}
+            onBack={() => setView("vault")}
+            hostOf={hostOf}
+            faviconFor={faviconFor}
+          />
+        ) : (
+          <>
         {/* Hero */}
         <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
           <div>
@@ -637,6 +766,20 @@ function WorkspaceInner({
                   {status.message}
                 </p>
               )}
+              {dupWarning && (
+                <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/10 p-3">
+                  <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                    ⚠ Duplicate destination
+                  </div>
+                  <div className="text-xs text-amber-100/90">
+                    Already saved as <span className="font-semibold">“{dupWarning.title}”</span>
+                    {dupWarning.alias && (
+                      <span className="ml-1 font-mono text-amber-400">/{dupWarning.alias}</span>
+                    )}
+                    . Click <span className="font-semibold">Shorten &amp; save</span> again to add anyway, or clear the destination.
+                  </div>
+                </div>
+              )}
               {status.kind === "success" && (
                 <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
                   ✓ {status.message}
@@ -820,6 +963,9 @@ function WorkspaceInner({
           </section>
         </div>
 
+          </>
+        )}
+
         <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground sm:flex-row">
           <span>FREEKITAAB · workspace</span>
           <span>powered by arolinks</span>
@@ -827,6 +973,64 @@ function WorkspaceInner({
       </main>
 
       <style>{`
+        /* Apple-style translucent nav */
+        .apple-nav {
+          background: color-mix(in oklab, #0a0a0a 72%, transparent);
+          -webkit-backdrop-filter: saturate(180%) blur(24px);
+          backdrop-filter: saturate(180%) blur(24px);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .apple-title { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui; }
+        .apple-segment {
+          display: inline-flex;
+          padding: 2px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 9px;
+        }
+        .segment {
+          display: inline-flex; align-items: center;
+          padding: 4px 12px;
+          font-size: 12.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.72);
+          border-radius: 7px;
+          transition: background 0.15s, color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .segment:hover { color: rgba(255,255,255,0.92); }
+        .segment-active {
+          background: rgba(255,255,255,0.11);
+          color: #fff;
+          box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .apple-pill {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 11.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.82);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.08);
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-btn {
+          padding: 5px 12px;
+          border-radius: 7px;
+          font-size: 12.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.9);
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.08);
+          transition: background 0.15s, color 0.15s, transform 0.05s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-btn:hover { background: rgba(255,255,255,0.14); }
+        .apple-btn:active { transform: translateY(0.5px); }
+        .apple-btn:disabled { opacity: 0.4; }
+        .apple-btn-danger:hover { background: rgba(239,68,68,0.18); color: #fecaca; }
+
         .input {
           width: 100%;
           height: 3rem;
@@ -1005,6 +1209,123 @@ function Stat({ label, value }: { label: string; value: number }) {
         {label}
       </div>
     </div>
+  );
+}
+
+function TrashPanel({
+  entries,
+  loading,
+  onRestore,
+  onPurge,
+  onEmpty,
+  onBack,
+  hostOf,
+  faviconFor,
+}: {
+  entries: Entry[];
+  loading: boolean;
+  onRestore: (id: string) => void;
+  onPurge: (id: string) => void;
+  onEmpty: () => void;
+  onBack: () => void;
+  hostOf: (u: string) => string;
+  faviconFor: (u: string) => string;
+}) {
+  return (
+    <section className="rounded-xl border-2 border-amber-900/40 bg-[#141210] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:p-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 pb-4">
+        <div>
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
+            Trash
+            <span className="ml-2 font-mono text-xs font-medium text-stone-500">
+              [{String(entries.length).padStart(2, "0")}]
+            </span>
+          </h2>
+          <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+            Deleted items · restore or purge
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={onBack} className="apple-btn">← Vault</button>
+          <button
+            onClick={onEmpty}
+            disabled={entries.length === 0}
+            className="apple-btn apple-btn-danger disabled:opacity-40"
+          >
+            Empty trash
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-16 text-center font-mono text-xs uppercase tracking-widest text-stone-500">
+          Loading…
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
+            ✓
+          </div>
+          <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+            Trash is empty
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {entries.map((e) => (
+            <div
+              key={e.id}
+              className="flex items-center gap-3 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-3 transition hover:border-amber-500/40"
+            >
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
+                {e.image ? (
+                  <img
+                    src={e.image}
+                    alt=""
+                    className="h-full w-full object-cover opacity-60"
+                    onError={(ev) => {
+                      (ev.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
+                    {e.title.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="line-clamp-1 font-display text-sm font-bold text-amber-50/80">
+                  {e.title}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-stone-500">
+                  {faviconFor(e.destination) && (
+                    <img src={faviconFor(e.destination)} alt="" className="h-3 w-3 rounded-sm opacity-60" />
+                  )}
+                  <span className="truncate">{hostOf(e.destination)}</span>
+                  {e.alias && <span className="text-amber-500/70">· /{e.alias}</span>}
+                </div>
+              </div>
+              <button
+                onClick={() => onRestore(e.id)}
+                className="apple-btn"
+                title="Restore"
+              >
+                Restore
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm("Permanently delete this link?")) onPurge(e.id);
+                }}
+                className="apple-btn apple-btn-danger"
+                title="Delete forever"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

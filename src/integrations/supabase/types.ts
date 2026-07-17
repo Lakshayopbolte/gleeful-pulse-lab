@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           alias: string | null
           created_at: string
+          deleted_at: string | null
           destination: string
           id: string
           image_url: string | null
@@ -29,6 +30,7 @@ export type Database = {
         Insert: {
           alias?: string | null
           created_at?: string
+          deleted_at?: string | null
           destination: string
           id?: string
           image_url?: string | null
@@ -40,6 +42,7 @@ export type Database = {
         Update: {
           alias?: string | null
           created_at?: string
+          deleted_at?: string | null
           destination?: string
           id?: string
           image_url?: string | null
