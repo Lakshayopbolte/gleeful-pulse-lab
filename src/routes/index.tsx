@@ -1,25 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
+import {
+  getGateState,
+  unlockSite,
+  lockSite,
+  saveLink,
+  deleteLink,
+  type LinkEntry,
+} from "@/lib/gate.functions";
 
 export const Route = createFileRoute("/")({
+  loader: () => getGateState(),
   component: Workspace,
 });
 
-type Entry = {
-  id: string;
-  title: string;
-  alias: string;
-  destination: string;
-  image: string;
-  shortUrl: string;
-  createdAt: number;
-};
-
-const STORAGE_KEY = "freekitaab.entries.v1";
+type Entry = LinkEntry;
 
 const STOP_WORDS = new Set([
   "the","a","an","of","and","or","for","to","in","on","at","by","with","from",
@@ -40,25 +40,30 @@ function makeShortAlias(title: string): string {
   return joined;
 }
 
-function loadEntries(): Entry[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveEntries(entries: Entry[]) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
-
 function Workspace() {
+  const router = useRouter();
+  const state = Route.useLoaderData();
+
+  if (!state.unlocked) {
+    return <UnlockScreen onUnlocked={() => router.invalidate()} />;
+  }
+
+  return <WorkspaceInner initialEntries={state.entries} user={state.user} />;
+}
+
+function WorkspaceInner({
+  initialEntries,
+  user,
+}: {
+  initialEntries: Entry[];
+  user: string;
+}) {
+  const router = useRouter();
   const shorten = useServerFn(shortenUrl);
   const runImageSearch = useServerFn(searchImages);
+  const saveLinkFn = useServerFn(saveLink);
+  const deleteLinkFn = useServerFn(deleteLink);
+  const lockFn = useServerFn(lockSite);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
@@ -74,9 +79,8 @@ function Workspace() {
     | { kind: "success"; message: string }
   >({ kind: "idle" });
 
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>(initialEntries);
   const [query, setQuery] = useState("");
-  const [hydrated, setHydrated] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [copyFormat, setCopyFormat] = useState<"json" | "csv" | "markdown" | "text" | "html">("json");
   const [flash, setFlash] = useState<string | null>(null);
@@ -155,15 +159,6 @@ function Workspace() {
     setFlash("Image linked");
     window.setTimeout(() => setFlash((f) => (f === "Image linked" ? null : f)), 1400);
   }
-
-  useEffect(() => {
-    setEntries(loadEntries());
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (hydrated) saveEntries(entries);
-  }, [entries, hydrated]);
 
   // Auto-derive alias from title until the user edits alias manually
   useEffect(() => {
@@ -311,18 +306,18 @@ function Workspace() {
       const res = await shorten({ data: { url: dest, alias: alias.trim() } });
       const finalShort = res.shortUrl;
       setShortUrl(finalShort);
-      const entry: Entry = {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        alias: alias.trim(),
-        destination: dest,
-        image: image.trim(),
-        shortUrl: finalShort,
-        createdAt: Date.now(),
-      };
-      setEntries((prev) => [entry, ...prev]);
+      const saved = await saveLinkFn({
+        data: {
+          title: title.trim(),
+          alias: alias.trim(),
+          destination: dest,
+          image: image.trim(),
+          shortUrl: finalShort,
+        },
+      });
+      setEntries((prev) => [saved, ...prev]);
       resetForm();
-      setStatus({ kind: "success", message: "Saved to workspace" });
+      setStatus({ kind: "success", message: "Saved to cloud" });
     } catch (err) {
       setStatus({
         kind: "error",
@@ -331,8 +326,20 @@ function Workspace() {
     }
   }
 
-  function deleteEntry(id: string) {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+  async function deleteEntry(id: string) {
+    const prev = entries;
+    setEntries((p) => p.filter((e) => e.id !== id));
+    try {
+      await deleteLinkFn({ data: { id } });
+    } catch {
+      setEntries(prev);
+      setStatus({ kind: "error", message: "Failed to delete" });
+    }
+  }
+
+  async function handleLock() {
+    await lockFn();
+    router.invalidate();
   }
 
   function copy(text: string) {
@@ -377,12 +384,24 @@ function Workspace() {
               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               {entries.length} saved
             </span>
+            {user && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-amber-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                {user}
+              </span>
+            )}
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
               className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/60 hover:text-primary hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0"
             >
               Export JSON
+            </button>
+            <button
+              onClick={handleLock}
+              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-red-500/60 hover:text-red-400"
+            >
+              Lock
             </button>
           </div>
         </div>
@@ -876,6 +895,102 @@ function Field({
       </div>
       {children}
     </label>
+  );
+}
+
+function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+  const unlockFn = useServerFn(unlockSite);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!username.trim() || !password) {
+      setError("Enter username and password");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await unlockFn({ data: { username: username.trim(), password } });
+      if (!res.ok) {
+        setError("Wrong password");
+        setBusy(false);
+        return;
+      }
+      onUnlocked();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center px-6">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-md rounded-xl border-2 border-amber-900/40 bg-[#141210] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+      >
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500 text-black shadow-[0_4px_0_0_#92400e]">
+            <span className="font-display text-xl font-bold">F</span>
+          </div>
+          <div>
+            <div className="font-display text-xl font-extrabold tracking-tight text-amber-50">
+              FREEKITAAB
+            </div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-amber-600/60">
+              00 · Sign in to the vault
+            </div>
+          </div>
+        </div>
+
+        <label className="mb-4 block">
+          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
+            Username
+          </div>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            placeholder="admin"
+            className="w-full rounded-lg border-2 border-amber-900/30 bg-[#1c1917] px-4 py-3 font-mono text-amber-50 outline-none focus:border-amber-500/55"
+          />
+        </label>
+        <label className="mb-4 block">
+          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
+            Password
+          </div>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="w-full rounded-lg border-2 border-amber-900/30 bg-[#1c1917] px-4 py-3 font-mono text-amber-50 outline-none focus:border-amber-500/55"
+          />
+        </label>
+
+        {error && (
+          <p className="mb-3 rounded-md border-2 border-red-500/40 bg-red-500/10 px-3 py-2 font-mono text-xs text-red-300">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full rounded-lg bg-amber-500 px-6 py-3.5 font-display font-bold text-black shadow-[0_4px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-1 active:shadow-none disabled:opacity-40"
+        >
+          {busy ? "Unlocking…" : "Unlock vault"}
+        </button>
+        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-500">
+          Session persists 30 days on any browser
+        </p>
+      </form>
+    </div>
   );
 }
 
