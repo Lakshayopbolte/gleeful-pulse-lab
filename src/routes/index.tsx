@@ -11,6 +11,10 @@ import {
   lockSite,
   saveLink,
   deleteLink,
+  getTrash,
+  restoreLink,
+  purgeLink,
+  emptyTrash,
   type LinkEntry,
 } from "@/lib/gate.functions";
 
@@ -48,15 +52,23 @@ function Workspace() {
     return <UnlockScreen onUnlocked={async () => router.invalidate()} />;
   }
 
-  return <WorkspaceInner initialEntries={state.entries} user={state.user} />;
+  return (
+    <WorkspaceInner
+      initialEntries={state.entries}
+      user={state.user}
+      initialTrashCount={state.trashCount ?? 0}
+    />
+  );
 }
 
 function WorkspaceInner({
   initialEntries,
   user,
+  initialTrashCount,
 }: {
   initialEntries: Entry[];
   user: string;
+  initialTrashCount: number;
 }) {
   const router = useRouter();
   const shorten = useServerFn(shortenUrl);
@@ -64,6 +76,10 @@ function WorkspaceInner({
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
   const lockFn = useServerFn(lockSite);
+  const getTrashFn = useServerFn(getTrash);
+  const restoreLinkFn = useServerFn(restoreLink);
+  const purgeLinkFn = useServerFn(purgeLink);
+  const emptyTrashFn = useServerFn(emptyTrash);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
