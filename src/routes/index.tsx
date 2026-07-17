@@ -917,78 +917,53 @@ function VaultCard({
   hostOf: (u: string) => string;
   faviconFor: (u: string) => string;
 }) {
-  const controls = useDragControls();
   const isList = density === "list";
 
   return (
-    <Reorder.Item
-      value={entry}
-      dragListener={false}
-      dragControls={controls}
-      layout
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 20, scale: 0.96 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      whileDrag={{ scale: 1.02, zIndex: 30 }}
-      className={`group relative overflow-hidden rounded-xl border backdrop-blur transition ${
+    <div
+      className={`group relative overflow-hidden rounded-lg border-2 bg-[#1c1917] transition-all ${
         selected
-          ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_var(--color-primary)]"
-          : "border-border bg-background/60 hover:border-primary/40 hover:shadow-[0_10px_40px_-20px_var(--color-primary)]"
+          ? "border-amber-500/70 shadow-[0_0_0_2px_rgba(245,158,11,0.15),0_8px_0_0_#92400e]"
+          : "border-amber-900/30 hover:border-amber-500/40 hover:-translate-y-0.5"
       }`}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition group-hover:opacity-100"
-        style={{ background: "var(--gradient-hero)" }}
-      />
-
       {/* Cover */}
       {!isList && (
-        <div className="relative h-32 w-full overflow-hidden border-b border-border/60 bg-secondary">
+        <div className="relative h-36 w-full overflow-hidden border-b-2 border-amber-900/30 bg-[#0f0d0b]">
           {entry.image ? (
             <img
               src={entry.image}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
               onError={(ev) => {
                 (ev.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
           ) : (
-            <div
-              className="h-full w-full"
-              style={{ background: "var(--gradient-mesh)" }}
-            />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#292524] to-[#0f0d0b] font-display text-4xl font-extrabold text-amber-900/40">
+              {entry.title.slice(0, 2).toUpperCase()}
+            </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent" />
-          <div className="absolute left-2 top-2 flex items-center gap-1.5">
-            <label
-              className="cursor-pointer rounded-md border border-border bg-background/80 p-1 backdrop-blur"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <input
-                type="checkbox"
-                checked={selected}
-                onChange={onToggle}
-                className="h-3.5 w-3.5 accent-primary"
-                aria-label={`Select ${entry.title}`}
-              />
-            </label>
-            <button
-              onPointerDown={(e) => controls.start(e)}
-              title="Drag to reorder"
-              className="cursor-grab rounded-md border border-border bg-background/80 px-1.5 py-1 font-mono text-[10px] text-muted-foreground backdrop-blur hover:text-foreground active:cursor-grabbing"
-            >
-              ⋮⋮
-            </button>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-[#141210]/30 to-transparent" />
+          <label
+            className="absolute left-2 top-2 flex cursor-pointer items-center gap-1 rounded border-2 border-amber-900/40 bg-[#141210]/90 p-1 backdrop-blur"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggle}
+              className="h-3.5 w-3.5 accent-amber-500"
+              aria-label={`Select ${entry.title}`}
+            />
+          </label>
           {entry.alias && (
-            <span className="absolute right-2 top-2 rounded-md border border-primary/40 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary backdrop-blur">
+            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[10px] text-stone-400 backdrop-blur">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
@@ -996,13 +971,13 @@ function VaultCard({
                 className="h-3.5 w-3.5 rounded-sm"
               />
             )}
-            <span className="font-mono">{hostOf(entry.destination)}</span>
+            <span className="font-mono font-medium">{hostOf(entry.destination)}</span>
           </div>
         </div>
       )}
 
-      <div className="p-3">
-        <div className="flex items-start gap-2">
+      <div className="p-4">
+        <div className="flex items-start gap-3">
           {isList && (
             <>
               <label
@@ -1013,17 +988,10 @@ function VaultCard({
                   type="checkbox"
                   checked={selected}
                   onChange={onToggle}
-                  className="h-4 w-4 accent-primary"
+                  className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <button
-                onPointerDown={(e) => controls.start(e)}
-                className="mt-1 cursor-grab font-mono text-xs text-muted-foreground hover:text-foreground active:cursor-grabbing"
-                title="Drag"
-              >
-                ⋮⋮
-              </button>
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
                 {entry.image ? (
                   <img
                     src={entry.image}
@@ -1034,7 +1002,7 @@ function VaultCard({
                     }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center font-mono text-xs text-muted-foreground">
+                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
                     {entry.title.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -1042,77 +1010,76 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+            <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug text-amber-50">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block truncate font-mono text-[11px] text-primary hover:underline"
+              className="mt-1 block truncate font-mono text-[11px] font-medium text-amber-400 hover:underline"
             >
               {entry.shortUrl}
             </a>
+            {isList && entry.alias && (
+              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-amber-500">
+                /{entry.alias}
+              </span>
+            )}
           </div>
+          <button
+            onClick={onDelete}
+            className="rounded p-1 font-mono text-xs text-stone-600 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+            title="Delete"
+          >
+            ✕
+          </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-1 text-[11px]">
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px]">
           <button
             onClick={onCopyAll}
-            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 font-medium text-primary transition hover:bg-primary/20"
+            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
           >
-            ⧉ Copy
+            ⧉ Copy all
           </button>
           <button
             onClick={() => onCopyField(entry.shortUrl)}
-            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Short
           </button>
           <button
             onClick={() => onCopyField(entry.destination)}
-            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Dest
           </button>
           {entry.image && (
             <button
               onClick={() => onCopyField(entry.image)}
-              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
             >
               Img
             </button>
           )}
           <button
             onClick={onToggleQr}
-            className={`rounded-md border px-2 py-1 transition ${
+            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
               qrOpen
-                ? "border-primary bg-primary/20 text-primary"
-                : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                : "border-amber-900/30 bg-[#0f0d0b] text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
             }`}
             title="QR code"
           >
             ▦ QR
           </button>
-          <button
-            onClick={onDelete}
-            className="ml-auto rounded-md px-2 py-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
-          >
-            ✕
-          </button>
         </div>
 
-        <AnimatePresence>
-          {qrOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mt-3 overflow-hidden"
-            >
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
-                <div className="rounded-md bg-white p-2">
+        {qrOpen && (
+          <div className="mt-3">
+            <div className="flex items-center gap-3 rounded-lg border-2 border-amber-900/40 bg-[#0f0d0b] p-3">
+              <div className="rounded bg-white p-2">
                   <QRCodeSVG
                     value={entry.shortUrl}
                     size={96}
@@ -1120,26 +1087,25 @@ function VaultCard({
                     bgColor="#ffffff"
                     fgColor="#000000"
                   />
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Scannable short link
-                  </div>
-                  <div className="truncate font-mono text-[11px] text-primary">
-                    {entry.shortUrl}
-                  </div>
-                  <button
-                    onClick={() => onCopyField(entry.shortUrl)}
-                    className="mt-1 rounded-md border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
-                  >
-                    Copy link
-                  </button>
-                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                  Scannable short link
+                </div>
+                <div className="truncate font-mono text-[11px] text-amber-400">
+                  {entry.shortUrl}
+                </div>
+                <button
+                  onClick={() => onCopyField(entry.shortUrl)}
+                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                >
+                  Copy link
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </Reorder.Item>
+    </div>
   );
 }
