@@ -109,6 +109,33 @@ function WorkspaceInner({
   const [qrOpenFor, setQrOpenFor] = useState<string | null>(null);
   const [density, setDensity] = useState<"grid" | "list">("grid");
 
+  // Trash / archive
+  const [view, setView] = useState<"vault" | "trash">("vault");
+  const [trashCount, setTrashCount] = useState<number>(initialTrashCount);
+  const [trashEntries, setTrashEntries] = useState<Entry[]>([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+
+  // Duplicate detection
+  const [dupWarning, setDupWarning] = useState<Entry | null>(null);
+
+  async function loadTrash() {
+    setTrashLoading(true);
+    try {
+      const list = await getTrashFn();
+      setTrashEntries(list);
+      setTrashCount(list.length);
+    } catch {
+      setStatus({ kind: "error", message: "Couldn't load trash" });
+    } finally {
+      setTrashLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (view === "trash") loadTrash();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   // Keyboard shortcuts: ⌘/Ctrl+K → focus search, ⌘/Ctrl+Enter → save, Esc → close panels
   useEffect(() => {
     function onKey(ev: KeyboardEvent) {
@@ -316,6 +343,17 @@ function WorkspaceInner({
       setStatus({ kind: "error", message: "Title and destination are required" });
       return;
     }
+    // Duplicate detection — same destination already in vault
+    const norm = dest.replace(/\/+$/, "").toLowerCase();
+    const dup = entries.find(
+      (e) => e.destination.replace(/\/+$/, "").toLowerCase() === norm,
+    );
+    if (dup && dupWarning?.id !== dup.id) {
+      setDupWarning(dup);
+      setStatus({ kind: "error", message: "Duplicate — click Save again to add anyway" });
+      return;
+    }
+    setDupWarning(null);
     setStatus({ kind: "saving" });
     try {
       // Always mint a fresh short link on save so the record is guaranteed complete
@@ -345,11 +383,59 @@ function WorkspaceInner({
   async function deleteEntry(id: string) {
     const prev = entries;
     setEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => c + 1);
     try {
       await deleteLinkFn({ data: { id } });
+      setFlash("Moved to trash");
+      window.setTimeout(() => setFlash((f) => (f === "Moved to trash" ? null : f)), 1400);
     } catch {
       setEntries(prev);
+      setTrashCount((c) => Math.max(0, c - 1));
       setStatus({ kind: "error", message: "Failed to delete" });
+    }
+  }
+
+  async function restoreEntry(id: string) {
+    const target = trashEntries.find((e) => e.id === id);
+    setTrashEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => Math.max(0, c - 1));
+    try {
+      const restored = await restoreLinkFn({ data: { id } });
+      setEntries((prev) => [restored, ...prev]);
+    } catch {
+      if (target) setTrashEntries((p) => [target, ...p]);
+      setTrashCount((c) => c + 1);
+      setStatus({ kind: "error", message: "Failed to restore" });
+    }
+  }
+
+  async function purgeEntry(id: string) {
+    const target = trashEntries.find((e) => e.id === id);
+    setTrashEntries((p) => p.filter((e) => e.id !== id));
+    setTrashCount((c) => Math.max(0, c - 1));
+    try {
+      await purgeLinkFn({ data: { id } });
+    } catch {
+      if (target) setTrashEntries((p) => [target, ...p]);
+      setTrashCount((c) => c + 1);
+      setStatus({ kind: "error", message: "Couldn't permanently delete" });
+    }
+  }
+
+  async function handleEmptyTrash() {
+    if (trashEntries.length === 0) return;
+    if (!window.confirm(`Permanently delete ${trashEntries.length} item(s)? This cannot be undone.`)) return;
+    const prev = trashEntries;
+    setTrashEntries([]);
+    setTrashCount(0);
+    try {
+      await emptyTrashFn();
+      setFlash("Trash emptied");
+      window.setTimeout(() => setFlash((f) => (f === "Trash emptied" ? null : f)), 1400);
+    } catch {
+      setTrashEntries(prev);
+      setTrashCount(prev.length);
+      setStatus({ kind: "error", message: "Couldn't empty trash" });
     }
   }
 
