@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { motion, AnimatePresence } from "framer-motion";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
 
@@ -348,7 +349,12 @@ function Workspace() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* Hero */}
-        <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end"
+        >
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary pulse-dot" /> arolinks · live
@@ -362,7 +368,12 @@ function Workspace() {
               and pipe the whole record into your next project.
             </p>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+            className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]"
+          >
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[image:var(--gradient-hero)] opacity-20 blur-3xl" />
             <div className="flex items-center justify-between">
               <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
@@ -383,8 +394,8 @@ function Workspace() {
                 value={entries.filter((e) => e.image).length}
               />
             </div>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
@@ -674,11 +685,20 @@ function Workspace() {
               )}
             </div>
 
-            {flash && (
-              <div className="mb-3 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-primary">
-                ✓ {flash} copied to clipboard
-              </div>
-            )}
+            <AnimatePresence>
+              {flash && (
+                <motion.div
+                  key={flash}
+                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.18 }}
+                  className="mb-3 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-primary"
+                >
+                  ✓ {flash} copied to clipboard
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-16 text-center">
@@ -693,9 +713,15 @@ function Workspace() {
               </div>
             ) : (
               <ul className="space-y-3">
+                <AnimatePresence initial={false}>
                 {filtered.map((e) => (
-                  <li
+                  <motion.li
                     key={e.id}
+                    layout
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: 20, scale: 0.96 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
                     className={`group rounded-xl border p-4 transition ${
                       selected.has(e.id)
                         ? "border-primary/70 bg-primary/5 shadow-[0_0_0_1px_var(--color-primary)]/0"
@@ -797,8 +823,9 @@ function Workspace() {
                         </div>
                       </div>
                     </div>
-                  </li>
+                  </motion.li>
                 ))}
+                </AnimatePresence>
               </ul>
             )}
           </section>
