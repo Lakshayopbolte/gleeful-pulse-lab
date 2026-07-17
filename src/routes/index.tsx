@@ -639,6 +639,7 @@ function Workspace() {
                 </button>
                 <button
                   onClick={handleSave}
+                  id="save-btn"
                   disabled={busy || !title.trim() || !destination.trim()}
                   className="group relative overflow-hidden rounded-lg bg-[image:var(--gradient-hero)] px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:-translate-y-px hover:brightness-110 active:translate-y-0 disabled:opacity-40 disabled:shadow-none disabled:hover:translate-y-0"
                 >
@@ -646,7 +647,7 @@ function Workspace() {
                     {status.kind === "saving" ? (
                       <>Shortening & saving…</>
                     ) : (
-                      <>Shorten &amp; save <span aria-hidden>→</span></>
+                      <>Shorten &amp; save <kbd className="ml-1 rounded border border-primary-foreground/30 bg-black/10 px-1.5 py-0.5 text-[9px] font-mono">⌘↵</kbd></>
                     )}
                   </span>
                 </button>
