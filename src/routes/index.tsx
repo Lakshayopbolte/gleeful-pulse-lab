@@ -390,12 +390,7 @@ function Workspace() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* Hero */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end"
-        >
+        <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary pulse-dot" /> arolinks · live
@@ -409,12 +404,7 @@ function Workspace() {
               and pipe the whole record into your next project.
             </p>
           </div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]"
-          >
+          <div className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]">
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[image:var(--gradient-hero)] opacity-20 blur-3xl" />
             <div className="flex items-center justify-between">
               <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
@@ -435,8 +425,8 @@ function Workspace() {
                 value={entries.filter((e) => e.image).length}
               />
             </div>
-          </motion.div>
-        </motion.section>
+          </div>
+        </section>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
