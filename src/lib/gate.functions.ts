@@ -84,13 +84,16 @@ export const getGateState = createServerFn({ method: "GET" }).handler(async () =
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("links")
-    .select("id,title,alias,destination,image_url,short_url,created_at")
+    .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at")
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
+  const active = (data ?? []).filter((r) => !r.deleted_at);
+  const trashCount = (data ?? []).length - active.length;
   return {
     unlocked: true as const,
     user: session.data.user ?? (bypass ? "Lakshay" : ""),
-    entries: (data ?? []).map(rowToEntry),
+    entries: active.map(rowToEntry),
+    trashCount,
   };
 });
 
@@ -151,7 +154,59 @@ export const deleteLink = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireUnlocked();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Soft-delete → moves to trash instead of destroying the record.
+    const { error } = await supabaseAdmin
+      .from("links")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const getTrash = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUnlocked();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("links")
+    .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at")
+    .not("deleted_at", "is", null)
+    .order("deleted_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(rowToEntry);
+});
+
+export const restoreLink = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    await requireUnlocked();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("links")
+      .update({ deleted_at: null })
+      .eq("id", data.id)
+      .select("id,title,alias,destination,image_url,short_url,created_at")
+      .single();
+    if (error) throw new Error(error.message);
+    return rowToEntry(row);
+  });
+
+export const purgeLink = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    await requireUnlocked();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("links").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true as const };
   });
+
+export const emptyTrash = createServerFn({ method: "POST" }).handler(async () => {
+  await requireUnlocked();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin
+    .from("links")
+    .delete()
+    .not("deleted_at", "is", null);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+});
