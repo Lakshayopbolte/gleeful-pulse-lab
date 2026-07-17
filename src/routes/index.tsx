@@ -674,8 +674,9 @@ function Workspace() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search…"
-                className="input h-9 w-40 text-sm"
+                id="vault-search"
+                placeholder="Search…  ⌘K"
+                className="input h-9 w-48 text-sm"
               />
             </div>
 
