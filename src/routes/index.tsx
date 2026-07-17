@@ -465,44 +465,58 @@ function WorkspaceInner({
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-border/70 glass-panel sticky top-0 z-20">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[image:var(--gradient-hero)] text-primary-foreground shadow-[var(--shadow-glow)]">
-              <span className="font-display text-xl font-bold">F</span>
-              <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-accent ring-2 ring-background pulse-dot" />
+      <header className="apple-nav sticky top-0 z-30">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-6">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-[7px] bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-[0_0_0_0.5px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.35)]">
+              <span className="font-display text-[13px] font-black tracking-tight">F</span>
             </div>
-            <div className="leading-tight">
-              <div className="font-display text-lg font-bold tracking-tight">
-                FREEKITAAB
-              </div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                Link Workspace
-              </div>
-            </div>
-          </div>
-          <div className="hidden items-center gap-2 md:flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              {entries.length} saved
+            <span className="apple-title text-[15px] font-semibold tracking-[-0.01em] text-white/95">
+              FREEKITAAB
             </span>
+          </div>
+
+          {/* Segmented control — Apple-style */}
+          <div className="apple-segment ml-4">
+            <button
+              onClick={() => setView("vault")}
+              className={`segment ${view === "vault" ? "segment-active" : ""}`}
+            >
+              Vault
+              <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+                {entries.length}
+              </span>
+            </button>
+            <button
+              onClick={() => setView("trash")}
+              className={`segment ${view === "trash" ? "segment-active" : ""}`}
+            >
+              Trash
+              {trashCount > 0 && (
+                <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+                  {trashCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1.5">
             {user && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-amber-300">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+              <span className="apple-pill hidden sm:inline-flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 {user}
               </span>
             )}
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
-              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/60 hover:text-primary hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0"
+              className="apple-btn"
+              title="Export JSON"
             >
-              Export JSON
+              Export
             </button>
-            <button
-              onClick={handleLock}
-              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-red-500/60 hover:text-red-400"
-            >
+            <button onClick={handleLock} className="apple-btn apple-btn-danger" title="Lock vault">
               Lock
             </button>
           </div>
