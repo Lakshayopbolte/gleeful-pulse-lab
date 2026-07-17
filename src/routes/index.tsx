@@ -772,121 +772,37 @@ function Workspace() {
                 </p>
               </div>
             ) : (
-              <ul className="space-y-3">
+              <Reorder.Group
+                axis="y"
+                values={entries}
+                onReorder={setEntries}
+                className={
+                  density === "grid"
+                    ? "grid gap-3 sm:grid-cols-2"
+                    : "space-y-2"
+                }
+              >
                 <AnimatePresence initial={false}>
-                {filtered.map((e) => (
-                  <motion.li
-                    key={e.id}
-                    layout
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, x: 20, scale: 0.96 }}
-                    transition={{ duration: 0.22, ease: "easeOut" }}
-                    className={`group rounded-xl border p-4 transition ${
-                      selected.has(e.id)
-                        ? "border-primary/70 bg-primary/5 shadow-[0_0_0_1px_var(--color-primary)]/0"
-                        : "border-border bg-background/60 hover:border-primary/40"
-                    }`}
-                  >
-                    <div className="flex gap-4">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(e.id)}
-                        onChange={() => toggleSelect(e.id)}
-                        className="mt-1 h-4 w-4 accent-primary"
-                        aria-label={`Select ${e.title}`}
-                      />
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
-                        {e.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={e.image}
-                            alt=""
-                            className="h-full w-full object-cover"
-                            onError={(ev) => {
-                              (ev.currentTarget as HTMLImageElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center font-mono text-xs text-muted-foreground">
-                            {e.title.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="truncate font-semibold text-foreground">
-                            {e.title}
-                          </h3>
-                          {e.alias && (
-                            <span className="shrink-0 rounded border border-border bg-secondary px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                              /{e.alias}
-                            </span>
-                          )}
-                        </div>
-                        <a
-                          href={e.shortUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-1 block truncate font-mono text-xs text-primary hover:underline"
-                        >
-                          {e.shortUrl}
-                        </a>
-                        <div
-                          className="mt-0.5 truncate text-xs text-muted-foreground"
-                          title={e.destination}
-                        >
-                          → {e.destination}
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                          <button
-                            onClick={() => copyOne(e)}
-                            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 font-medium text-primary transition hover:bg-primary/20"
-                            title={`Copy all fields as ${copyFormat.toUpperCase()}`}
-                          >
-                            ⧉ Copy all
-                          </button>
-                          <button
-                            onClick={() => copy(e.shortUrl)}
-                            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
-                          >
-                            Short
-                          </button>
-                          <button
-                            onClick={() => copy(e.destination)}
-                            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
-                          >
-                            Dest
-                          </button>
-                          {e.image && (
-                            <button
-                              onClick={() => copy(e.image)}
-                              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
-                            >
-                              Image
-                            </button>
-                          )}
-                          {e.alias && (
-                            <button
-                              onClick={() => copy(e.alias)}
-                              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
-                            >
-                              Alias
-                            </button>
-                          )}
-                          <button
-                            onClick={() => deleteEntry(e.id)}
-                            className="ml-auto rounded-md px-2 py-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.li>
-                ))}
+                  {filtered.map((e) => (
+                    <VaultCard
+                      key={e.id}
+                      entry={e}
+                      density={density}
+                      selected={selected.has(e.id)}
+                      onToggle={() => toggleSelect(e.id)}
+                      onCopyAll={() => copyOne(e)}
+                      onCopyField={(v) => copy(v)}
+                      onDelete={() => deleteEntry(e.id)}
+                      qrOpen={qrOpenFor === e.id}
+                      onToggleQr={() =>
+                        setQrOpenFor((cur) => (cur === e.id ? null : e.id))
+                      }
+                      hostOf={hostOf}
+                      faviconFor={faviconFor}
+                    />
+                  ))}
                 </AnimatePresence>
-              </ul>
+              </Reorder.Group>
             )}
           </section>
         </div>
