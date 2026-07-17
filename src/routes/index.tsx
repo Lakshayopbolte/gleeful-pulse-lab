@@ -1329,14 +1329,6 @@ function TrashPanel({
   );
 }
 
-function StatRemoved() { // placeholder to keep tree stable
-  return (
-    <div className="rounded-lg border border-border bg-background/40 py-2">
-      <div />
-    </div>
-  );
-}
-
 function VaultCard({
   entry,
   density,
