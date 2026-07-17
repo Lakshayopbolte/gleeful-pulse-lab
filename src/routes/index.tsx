@@ -19,6 +19,25 @@ type Entry = {
 
 const STORAGE_KEY = "freekitaab.entries.v1";
 
+const STOP_WORDS = new Set([
+  "the","a","an","of","and","or","for","to","in","on","at","by","with","from",
+  "is","are","be","this","that","my","your","our","new","how","what","why",
+]);
+
+function makeShortAlias(title: string): string {
+  const cleaned = title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  if (cleaned.length === 0) return "";
+  const meaningful = cleaned.filter((w) => !STOP_WORDS.has(w));
+  const words = (meaningful.length ? meaningful : cleaned).slice(0, 2);
+  const joined = words.join("-").slice(0, 12).replace(/-+$/,"");
+  return joined;
+}
+
 function loadEntries(): Entry[] {
   if (typeof window === "undefined") return [];
   try {
