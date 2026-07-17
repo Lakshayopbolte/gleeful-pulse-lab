@@ -478,34 +478,37 @@ function Workspace() {
                     <p className="mb-2 text-xs text-destructive-foreground">{imgError}</p>
                   )}
                   {imgSearching ? (
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                      {Array.from({ length: 8 }).map((_, i) => (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {Array.from({ length: 9 }).map((_, i) => (
                         <div
                           key={i}
-                          className="aspect-square animate-pulse rounded-md border border-border bg-secondary/60"
+                          className="aspect-[4/5] animate-pulse rounded-lg border border-border bg-secondary/60"
                         />
                       ))}
                     </div>
                   ) : imgResults.length > 0 ? (
-                    <div className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+                    <div className="grid max-h-[32rem] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
                       {imgResults.map((hit) => (
                         <button
                           key={hit.id}
                           type="button"
                           onClick={() => pickImage(hit)}
                           title={hit.title}
-                          className="group relative aspect-square overflow-hidden rounded-md border border-border bg-secondary transition hover:border-primary hover:shadow-[var(--shadow-glow)]"
+                          className="group flex flex-col overflow-hidden rounded-lg border border-border bg-secondary text-left transition hover:border-primary hover:shadow-[var(--shadow-glow)]"
                         >
-                          <img
-                            src={hit.thumbnail}
-                            alt={hit.title}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition group-hover:scale-105"
-                            onError={(ev) => {
-                              (ev.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                            }}
-                          />
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-background/95 to-transparent px-1.5 py-1 text-left text-[10px] text-foreground opacity-0 transition group-hover:opacity-100">
+                          <div className="relative aspect-[4/5] w-full overflow-hidden bg-background">
+                            <img
+                              src={hit.thumbnail}
+                              alt={hit.title}
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              className="h-full w-full object-cover transition group-hover:scale-105"
+                              onError={(ev) => {
+                                (ev.currentTarget as HTMLImageElement).style.visibility = "hidden";
+                              }}
+                            />
+                          </div>
+                          <div className="border-t border-border/60 px-2 py-1.5 text-[11px] leading-snug text-foreground line-clamp-2 min-h-[2.4rem]">
                             {hit.title}
                           </div>
                         </button>
@@ -514,7 +517,7 @@ function Workspace() {
                   ) : (
                     !imgError && (
                       <p className="py-6 text-center text-xs text-muted-foreground">
-                        Type a query and hit Search — results come from Openverse (free, CC-licensed).
+                        Type a query and hit Search — results come from across the web.
                       </p>
                     )
                   )}

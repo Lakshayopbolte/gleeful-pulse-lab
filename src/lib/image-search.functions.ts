@@ -16,13 +16,73 @@ export const searchImages = createServerFn({ method: "POST" })
     return { q };
   })
   .handler(async ({ data }): Promise<{ results: ImageHit[] }> => {
-    // Google Books first — great covers, real titles, no key required.
+    // Web-wide image search via DuckDuckGo (no key, aggregates from across the web).
+    const ddg = await tryDuckDuckGo(data.q);
+    if (ddg.length > 0) return { results: ddg };
+    // Fallbacks specifically useful for book covers.
     const gb = await tryGoogleBooks(data.q);
     if (gb.length > 0) return { results: gb };
-    // Open Library fallback — no rate limit, no key.
     const ol = await tryOpenLibrary(data.q);
     return { results: ol };
   });
+
+async function tryDuckDuckGo(q: string): Promise<ImageHit[]> {
+  try {
+    const ua =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+    // Step 1 — fetch the SERP HTML to get the vqd token DDG requires.
+    const tokenRes = await fetch(
+      `https://duckduckgo.com/?q=${encodeURIComponent(q)}&iax=images&ia=images`,
+      { headers: { "User-Agent": ua, Accept: "text/html" } },
+    );
+    if (!tokenRes.ok) return [];
+    const html = await tokenRes.text();
+    const m =
+      html.match(/vqd=["']([\d-]+)["']/) ||
+      html.match(/vqd=([\d-]+)&/) ||
+      html.match(/"vqd":"([\d-]+)"/);
+    const vqd = m?.[1];
+    if (!vqd) return [];
+    // Step 2 — call the JSON image endpoint.
+    const params = new URLSearchParams({
+      l: "us-en",
+      o: "json",
+      q,
+      vqd,
+      f: ",,,,,",
+      p: "1",
+    });
+    const res = await fetch(`https://duckduckgo.com/i.js?${params.toString()}`, {
+      headers: {
+        "User-Agent": ua,
+        Accept: "application/json",
+        Referer: "https://duckduckgo.com/",
+      },
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as {
+      results?: Array<{
+        title?: string;
+        image?: string;
+        thumbnail?: string;
+        url?: string;
+        source?: string;
+      }>;
+    };
+    return (json.results ?? [])
+      .filter((r) => r.image && r.thumbnail)
+      .slice(0, 60)
+      .map((r, i) => ({
+        id: `ddg-${i}-${r.image}`,
+        title: (r.title || r.source || "Untitled").trim(),
+        url: r.image as string,
+        thumbnail: r.thumbnail as string,
+        source: r.url ?? "",
+      }));
+  } catch {
+    return [];
+  }
+}
 
 async function tryGoogleBooks(q: string): Promise<ImageHit[]> {
   try {
