@@ -1212,6 +1212,131 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
+function TrashPanel({
+  entries,
+  loading,
+  onRestore,
+  onPurge,
+  onEmpty,
+  onBack,
+  hostOf,
+  faviconFor,
+}: {
+  entries: Entry[];
+  loading: boolean;
+  onRestore: (id: string) => void;
+  onPurge: (id: string) => void;
+  onEmpty: () => void;
+  onBack: () => void;
+  hostOf: (u: string) => string;
+  faviconFor: (u: string) => string;
+}) {
+  return (
+    <section className="rounded-xl border-2 border-amber-900/40 bg-[#141210] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:p-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 pb-4">
+        <div>
+          <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
+            Trash
+            <span className="ml-2 font-mono text-xs font-medium text-stone-500">
+              [{String(entries.length).padStart(2, "0")}]
+            </span>
+          </h2>
+          <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+            Deleted items · restore or purge
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={onBack} className="apple-btn">← Vault</button>
+          <button
+            onClick={onEmpty}
+            disabled={entries.length === 0}
+            className="apple-btn apple-btn-danger disabled:opacity-40"
+          >
+            Empty trash
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-16 text-center font-mono text-xs uppercase tracking-widest text-stone-500">
+          Loading…
+        </div>
+      ) : entries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
+            ✓
+          </div>
+          <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+            Trash is empty
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {entries.map((e) => (
+            <div
+              key={e.id}
+              className="flex items-center gap-3 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-3 transition hover:border-amber-500/40"
+            >
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
+                {e.image ? (
+                  <img
+                    src={e.image}
+                    alt=""
+                    className="h-full w-full object-cover opacity-60"
+                    onError={(ev) => {
+                      (ev.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
+                    {e.title.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="line-clamp-1 font-display text-sm font-bold text-amber-50/80">
+                  {e.title}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-stone-500">
+                  {faviconFor(e.destination) && (
+                    <img src={faviconFor(e.destination)} alt="" className="h-3 w-3 rounded-sm opacity-60" />
+                  )}
+                  <span className="truncate">{hostOf(e.destination)}</span>
+                  {e.alias && <span className="text-amber-500/70">· /{e.alias}</span>}
+                </div>
+              </div>
+              <button
+                onClick={() => onRestore(e.id)}
+                className="apple-btn"
+                title="Restore"
+              >
+                Restore
+              </button>
+              <button
+                onClick={() => {
+                  if (window.confirm("Permanently delete this link?")) onPurge(e.id);
+                }}
+                className="apple-btn apple-btn-danger"
+                title="Delete forever"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function StatRemoved() { // placeholder to keep tree stable
+  return (
+    <div className="rounded-lg border border-border bg-background/40 py-2">
+      <div />
+    </div>
+  );
+}
+
 function VaultCard({
   entry,
   density,
