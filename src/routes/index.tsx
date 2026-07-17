@@ -195,15 +195,15 @@ function Workspace() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-border/70 bg-background/70 backdrop-blur-xl sticky top-0 z-20">
+      <header className="border-b border-border/70 glass-panel sticky top-0 z-20">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-[var(--shadow-glow)]">
-              <span className="font-mono text-lg font-bold">F</span>
-              <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-accent ring-2 ring-background" />
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[image:var(--gradient-hero)] text-primary-foreground shadow-[var(--shadow-glow)]">
+              <span className="font-display text-xl font-bold">F</span>
+              <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-accent ring-2 ring-background pulse-dot" />
             </div>
             <div className="leading-tight">
-              <div className="font-display text-lg font-semibold tracking-tight">
+              <div className="font-display text-lg font-bold tracking-tight">
                 FREEKITAAB
               </div>
               <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
@@ -212,13 +212,14 @@ function Workspace() {
             </div>
           </div>
           <div className="hidden items-center gap-2 md:flex">
-            <span className="rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
               {entries.length} saved
             </span>
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
-              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/60 hover:text-primary disabled:opacity-40"
+              className="rounded-full border border-border bg-secondary/60 px-4 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/60 hover:text-primary hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0"
             >
               Export JSON
             </button>
@@ -228,28 +229,32 @@ function Workspace() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* Hero */}
-        <section className="mb-10 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
+        <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" /> arolinks · live
+              <span className="h-1.5 w-1.5 rounded-full bg-primary pulse-dot" /> arolinks · live
             </div>
-            <h1 className="text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">
+            <h1 className="text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl">
               Shorten. Tag.{" "}
-              <span className="bg-[image:var(--gradient-hero)] bg-clip-text text-transparent">
-                Vault.
-              </span>
+              <span className="text-gradient italic">Vault.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
               Paste a destination, mint a short link, attach title & artwork,
               and pipe the whole record into your next project.
             </p>
           </div>
-          <div className="rounded-2xl border border-border bg-card/80 p-5 shadow-[var(--shadow-card)]">
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              Endpoint
+          <div className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[image:var(--gradient-hero)] opacity-20 blur-3xl" />
+            <div className="flex items-center justify-between">
+              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                Endpoint
+              </div>
+              <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary">
+                200 · OK
+              </span>
             </div>
             <div className="mt-2 font-mono text-sm text-foreground">
-              arolinks.com/api
+              <span className="text-muted-foreground">GET </span>arolinks.com/api
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
               <Stat label="Entries" value={entries.length} />
@@ -264,7 +269,8 @@ function Workspace() {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
-          <section className="rounded-2xl border border-border bg-card/80 p-6 shadow-[var(--shadow-card)]">
+          <section className="relative rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
+            <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-semibold">New link</h2>
               <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
@@ -360,26 +366,32 @@ function Workspace() {
               <div className="flex items-center justify-between pt-2">
                 <button
                   onClick={resetForm}
-                  className="text-xs text-muted-foreground hover:text-foreground"
+                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
                 >
                   Clear
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={busy || !title.trim() || !destination.trim()}
-                  className="group relative overflow-hidden rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
+                  className="group relative overflow-hidden rounded-lg bg-[image:var(--gradient-hero)] px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:-translate-y-px hover:brightness-110 active:translate-y-0 disabled:opacity-40 disabled:shadow-none disabled:hover:translate-y-0"
                 >
-                  {status.kind === "saving" ? "Saving…" : "Save to vault →"}
+                  <span className="relative z-10 inline-flex items-center gap-2">
+                    {status.kind === "saving" ? (
+                      <>Shortening & saving…</>
+                    ) : (
+                      <>Shorten &amp; save <span aria-hidden>→</span></>
+                    )}
+                  </span>
                 </button>
               </div>
             </div>
           </section>
 
           {/* Vault */}
-          <section className="rounded-2xl border border-border bg-card/60 p-6 shadow-[var(--shadow-card)]">
+          <section className="rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
             <div className="mb-5 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold">Vault</h2>
+                <h2 className="text-lg font-semibold">Vault <span className="ml-1 font-mono text-xs text-muted-foreground">· {filtered.length}</span></h2>
                 <p className="text-xs text-muted-foreground">
                   Saved locally to this browser
                 </p>
