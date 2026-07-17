@@ -900,7 +900,7 @@ function Field({
 
 function UnlockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   const unlockFn = useServerFn(unlockSite);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("Lakshay");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
