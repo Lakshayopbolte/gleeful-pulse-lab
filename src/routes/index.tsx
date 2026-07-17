@@ -825,22 +825,40 @@ function Workspace() {
       <style>{`
         .input {
           width: 100%;
-          height: 2.5rem;
+          height: 3rem;
           border-radius: 0.5rem;
-          border: 1px solid var(--color-border);
-          background: color-mix(in oklab, var(--color-background) 75%, transparent);
-          padding: 0 0.75rem;
-          color: var(--color-foreground);
-          font-size: 0.875rem;
+          border: 2px solid rgb(120 53 15 / 0.3);
+          background: #1c1917;
+          padding: 0 1rem;
+          color: rgb(254 243 199);
+          font-size: 0.9rem;
           outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
+          transition: border-color 0.15s;
         }
         .input:focus {
-          border-color: color-mix(in oklab, var(--color-primary) 60%, transparent);
-          box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-primary) 20%, transparent);
+          border-color: rgb(245 158 11 / 0.55);
         }
         .input::placeholder {
-          color: color-mix(in oklab, var(--color-muted-foreground) 70%, transparent);
+          color: rgb(120 113 108);
+        }
+        .btn-ghost-amber {
+          border-radius: 0.5rem;
+          border: 2px solid rgb(120 53 15 / 0.3);
+          background: #292524;
+          color: rgb(253 230 138);
+          height: 3rem;
+          transition: background 0.15s, transform 0.05s;
+        }
+        .btn-ghost-amber:hover { background: #3d3835; }
+        .btn-ghost-amber:active { transform: translateY(2px); }
+        .composer-card { position: relative; }
+        .composer-card::before {
+          content: "";
+          position: absolute; inset: 0;
+          pointer-events: none;
+          background-image: radial-gradient(rgb(120 53 15 / 0.08) 1px, transparent 1px);
+          background-size: 18px 18px;
+          mask-image: linear-gradient(to bottom, black, transparent 70%);
         }
       `}</style>
     </div>
