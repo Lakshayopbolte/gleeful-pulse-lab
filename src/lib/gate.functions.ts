@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession, getWebRequest } from "@tanstack/react-start/server";
+import { useSession, getRequest } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 export type LinkEntry = {
@@ -42,7 +42,7 @@ async function getSession() {
 // Lovable preview host or localhost. Published production stays gated.
 function isPreviewHost(): boolean {
   try {
-    const req = getWebRequest();
+    const req = getRequest();
     const host = req?.headers.get("host") ?? "";
     return (
       host.includes("id-preview--") ||
