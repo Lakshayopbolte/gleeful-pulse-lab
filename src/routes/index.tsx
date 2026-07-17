@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
+import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
 
@@ -86,6 +87,47 @@ function Workspace() {
   const [imgSearching, setImgSearching] = useState(false);
   const [imgError, setImgError] = useState<string | null>(null);
   const [imgPanelOpen, setImgPanelOpen] = useState(false);
+  const [qrOpenFor, setQrOpenFor] = useState<string | null>(null);
+  const [density, setDensity] = useState<"grid" | "list">("grid");
+
+  // Keyboard shortcuts: ⌘/Ctrl+K → focus search, ⌘/Ctrl+Enter → save, Esc → close panels
+  useEffect(() => {
+    function onKey(ev: KeyboardEvent) {
+      const meta = ev.metaKey || ev.ctrlKey;
+      if (meta && ev.key.toLowerCase() === "k") {
+        ev.preventDefault();
+        const el = document.getElementById("vault-search") as HTMLInputElement | null;
+        el?.focus();
+        el?.select();
+      } else if (meta && ev.key === "Enter") {
+        ev.preventDefault();
+        const btn = document.getElementById("save-btn") as HTMLButtonElement | null;
+        btn?.click();
+      } else if (ev.key === "Escape") {
+        setImgPanelOpen(false);
+        setQrOpenFor(null);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function faviconFor(url: string) {
+    try {
+      const u = new URL(url);
+      return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+    } catch {
+      return "";
+    }
+  }
+
+  function hostOf(url: string) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      return url;
+    }
+  }
 
   async function handleImageSearch() {
     const q = (imgQuery.trim() || title.trim());
