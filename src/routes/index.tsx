@@ -441,16 +441,17 @@ function Workspace() {
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
-          <section className="relative rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
-            <div className="pointer-events-none absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">New link</h2>
-              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+          <section className="composer-card relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-between border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
+              <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
+                New link
+              </h2>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
                 01 · Compose
               </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6 p-6 sm:p-8">
               <Field label="Title" required>
                 <input
                   value={title}
@@ -460,7 +461,8 @@ function Workspace() {
                 />
               </Field>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-12 sm:col-span-5">
                 <Field label="Alias" hint="a-z 0-9 _ -">
                   <input
                     value={alias}
@@ -472,24 +474,27 @@ function Workspace() {
                     className="input font-mono"
                   />
                 </Field>
+                </div>
+                <div className="col-span-12 sm:col-span-7">
                 <Field label="Image link">
                   <div className="flex gap-2">
                     <input
                       value={image}
                       onChange={(e) => setImage(e.target.value)}
-                      placeholder="https://…/cover.jpg  or  search →"
+                      placeholder="https://…/cover.jpg"
                       className="input flex-1"
                     />
                     <button
                       type="button"
                       onClick={() => setImgPanelOpen((v) => !v)}
-                      className="whitespace-nowrap rounded-md border border-border bg-secondary px-3 text-sm font-medium text-secondary-foreground transition hover:border-primary/60 hover:text-primary"
+                      className="btn-ghost-amber flex aspect-square items-center justify-center"
                       title="Search images"
                     >
-                      🔍
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </button>
                   </div>
                 </Field>
+                </div>
               </div>
 
               {imgPanelOpen && (
@@ -588,7 +593,7 @@ function Workspace() {
                   <button
                     onClick={handleShorten}
                     disabled={busy || !destination.trim()}
-                    className="whitespace-nowrap rounded-md border border-border bg-secondary px-4 text-sm font-medium text-secondary-foreground transition hover:border-primary/60 hover:text-primary disabled:opacity-40"
+                    className="btn-ghost-amber whitespace-nowrap px-5 font-mono text-sm font-bold uppercase tracking-wider disabled:opacity-40"
                   >
                     {status.kind === "shortening" ? "…" : "Shorten"}
                   </button>
@@ -630,10 +635,10 @@ function Workspace() {
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-4">
                 <button
                   onClick={resetForm}
-                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                  className="font-mono text-[11px] font-bold uppercase tracking-widest text-stone-500 transition-colors hover:text-red-400"
                 >
                   Clear
                 </button>
@@ -641,15 +646,19 @@ function Workspace() {
                   onClick={handleSave}
                   id="save-btn"
                   disabled={busy || !title.trim() || !destination.trim()}
-                  className="group relative overflow-hidden rounded-lg bg-[image:var(--gradient-hero)] px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:-translate-y-px hover:brightness-110 active:translate-y-0 disabled:opacity-40 disabled:shadow-none disabled:hover:translate-y-0"
+                  className="group relative flex items-center gap-3 rounded-lg bg-amber-500 px-6 py-3.5 font-display font-bold text-black shadow-[0_4px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-[0_4px_0_0_#92400e]"
                 >
-                  <span className="relative z-10 inline-flex items-center gap-2">
-                    {status.kind === "saving" ? (
-                      <>Shortening & saving…</>
-                    ) : (
-                      <>Shorten &amp; save <kbd className="ml-1 rounded border border-primary-foreground/30 bg-black/10 px-1.5 py-0.5 text-[9px] font-mono">⌘↵</kbd></>
-                    )}
-                  </span>
+                  {status.kind === "saving" ? (
+                    <span className="text-base">Shortening & saving…</span>
+                  ) : (
+                    <>
+                      <span className="text-base sm:text-lg">Shorten &amp; save</span>
+                      <kbd className="flex items-center gap-1 rounded border border-black/10 bg-black/10 px-2 py-1 font-mono text-[10px] font-bold">
+                        <span>⌘</span>
+                        <span>↵</span>
+                      </kbd>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
