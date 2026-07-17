@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
@@ -391,12 +390,7 @@ function Workspace() {
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         {/* Hero */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end"
-        >
+        <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
               <span className="h-1.5 w-1.5 rounded-full bg-primary pulse-dot" /> arolinks · live
@@ -410,12 +404,7 @@ function Workspace() {
               and pipe the whole record into your next project.
             </p>
           </div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]"
-          >
+          <div className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]">
             <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[image:var(--gradient-hero)] opacity-20 blur-3xl" />
             <div className="flex items-center justify-between">
               <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
@@ -436,8 +425,8 @@ function Workspace() {
                 value={entries.filter((e) => e.image).length}
               />
             </div>
-          </motion.div>
-        </motion.section>
+          </div>
+        </section>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
@@ -665,133 +654,129 @@ function Workspace() {
           </section>
 
           {/* Vault */}
-          <section className="rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <section className="relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
               <div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
                   Vault
-                  <span className="ml-2 font-mono text-xs text-muted-foreground">
-                    · {filtered.length}
+                  <span className="ml-2 font-mono text-xs font-medium text-stone-500">
+                    [{String(filtered.length).padStart(2, "0")}
                     {selected.size > 0 && (
-                      <span className="ml-1 text-primary">/ {selected.size} picked</span>
+                      <span className="text-amber-500"> / {selected.size} picked</span>
                     )}
+                    ]
                   </span>
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  Select rows → pick a format → copy the whole payload
+                <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+                  02 · Retrieve
                 </p>
               </div>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                id="vault-search"
-                placeholder="Search…  ⌘K"
-                className="input h-9 w-48 text-sm"
-              />
-            </div>
-
-            {/* Bulk toolbar */}
-            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-background/40 p-2">
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-                <input
-                  type="checkbox"
-                  checked={allVisibleSelected}
-                  onChange={toggleSelectAll}
-                  disabled={filtered.length === 0}
-                  className="accent-primary"
-                />
-                <span className="font-mono uppercase tracking-widest">
-                  {allVisibleSelected ? "Unselect all" : "Select all"}
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-600">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </span>
-              </label>
-              <div className="mx-1 h-5 w-px bg-border" />
-              <div className="flex items-center gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
-                {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setCopyFormat(f)}
-                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
-                      copyFormat === f
-                        ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  id="vault-search"
+                  placeholder="Search  ⌘K"
+                  className="input h-11 w-56 pl-9 text-sm"
+                />
               </div>
-              <button
-                onClick={copySelected}
-                disabled={filtered.length === 0}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-[image:var(--gradient-hero)] px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:brightness-110 disabled:opacity-40"
-              >
-                <span aria-hidden>⧉</span>
-                Copy {selected.size > 0 ? `${selected.size}` : "all"} as {copyFormat.toUpperCase()}
-              </button>
-              <div className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 p-0.5">
-                {(["grid", "list"] as const).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDensity(d)}
-                    title={`${d} view`}
-                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
-                      density === d
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {d === "grid" ? "▦" : "≡"}
-                  </button>
-                ))}
-              </div>
-              {selected.size > 0 && (
-                <button
-                  onClick={clearSelection}
-                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                >
-                  Clear
-                </button>
-              )}
             </div>
 
-            <AnimatePresence>
-              {flash && (
-                <motion.div
-                  key={flash}
-                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                  transition={{ duration: 0.18 }}
-                  className="mb-3 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-primary"
-                >
-                  ✓ {flash} copied to clipboard
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-16 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-secondary/50 font-mono text-lg text-muted-foreground">
-                  ∅
+            <div className="p-6 sm:p-8">
+              {/* Bulk toolbar */}
+              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-stone-400 hover:text-amber-200">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleSelectAll}
+                    disabled={filtered.length === 0}
+                    className="accent-amber-500"
+                  />
+                  <span className="font-mono font-bold uppercase tracking-widest">
+                    {allVisibleSelected ? "Unselect" : "Select all"}
+                  </span>
+                </label>
+                <div className="mx-1 h-5 w-px bg-amber-900/40" />
+                <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                  {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCopyFormat(f)}
+                      className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                        copyFormat === f
+                          ? "bg-amber-500 text-black"
+                          : "text-stone-500 hover:text-amber-200"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {entries.length === 0
-                    ? "No links saved yet — start with your first short."
-                    : "No matches for that search."}
-                </p>
+                <div className="ml-auto flex items-center gap-2">
+                  <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                    {(["grid", "list"] as const).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDensity(d)}
+                        title={`${d} view`}
+                        className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                          density === d
+                            ? "bg-amber-200 text-black"
+                            : "text-stone-500 hover:text-amber-200"
+                        }`}
+                      >
+                        {d === "grid" ? "▦" : "≡"}
+                      </button>
+                    ))}
+                  </div>
+                  {selected.size > 0 && (
+                    <button
+                      onClick={clearSelection}
+                      className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={copySelected}
+                    disabled={filtered.length === 0}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-2 font-display text-xs font-bold text-black shadow-[0_3px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span aria-hidden>⧉</span>
+                    Copy {selected.size > 0 ? selected.size : "all"} · {copyFormat.toUpperCase()}
+                  </button>
+                </div>
               </div>
-            ) : (
-              <Reorder.Group
-                axis="y"
-                values={entries}
-                onReorder={setEntries}
-                className={
-                  density === "grid"
-                    ? "grid gap-3 sm:grid-cols-2"
-                    : "space-y-2"
-                }
-              >
-                <AnimatePresence initial={false}>
+
+              {flash && (
+                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-400">
+                  ✓ {flash} copied to clipboard
+                </div>
+              )}
+
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
+                    ∅
+                  </div>
+                  <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+                    {entries.length === 0
+                      ? "Vault empty — mint your first short link"
+                      : "No matches for that search"}
+                  </p>
+                </div>
+              ) : (
+                <div
+                  className={
+                    density === "grid"
+                      ? "grid gap-4 sm:grid-cols-2"
+                      : "space-y-3"
+                  }
+                >
                   {filtered.map((e) => (
                     <VaultCard
                       key={e.id}
@@ -810,9 +795,9 @@ function Workspace() {
                       faviconFor={faviconFor}
                     />
                   ))}
-                </AnimatePresence>
-              </Reorder.Group>
-            )}
+                </div>
+              )}
+            </div>
           </section>
         </div>
 
@@ -932,78 +917,53 @@ function VaultCard({
   hostOf: (u: string) => string;
   faviconFor: (u: string) => string;
 }) {
-  const controls = useDragControls();
   const isList = density === "list";
 
   return (
-    <Reorder.Item
-      value={entry}
-      dragListener={false}
-      dragControls={controls}
-      layout
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 20, scale: 0.96 }}
-      transition={{ duration: 0.22, ease: "easeOut" }}
-      whileDrag={{ scale: 1.02, zIndex: 30 }}
-      className={`group relative overflow-hidden rounded-xl border backdrop-blur transition ${
+    <div
+      className={`group relative overflow-hidden rounded-lg border-2 bg-[#1c1917] transition-all ${
         selected
-          ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_var(--color-primary)]"
-          : "border-border bg-background/60 hover:border-primary/40 hover:shadow-[0_10px_40px_-20px_var(--color-primary)]"
+          ? "border-amber-500/70 shadow-[0_0_0_2px_rgba(245,158,11,0.15),0_8px_0_0_#92400e]"
+          : "border-amber-900/30 hover:border-amber-500/40 hover:-translate-y-0.5"
       }`}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition group-hover:opacity-100"
-        style={{ background: "var(--gradient-hero)" }}
-      />
-
       {/* Cover */}
       {!isList && (
-        <div className="relative h-32 w-full overflow-hidden border-b border-border/60 bg-secondary">
+        <div className="relative h-36 w-full overflow-hidden border-b-2 border-amber-900/30 bg-[#0f0d0b]">
           {entry.image ? (
             <img
               src={entry.image}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
               onError={(ev) => {
                 (ev.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
           ) : (
-            <div
-              className="h-full w-full"
-              style={{ background: "var(--gradient-mesh)" }}
-            />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#292524] to-[#0f0d0b] font-display text-4xl font-extrabold text-amber-900/40">
+              {entry.title.slice(0, 2).toUpperCase()}
+            </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent" />
-          <div className="absolute left-2 top-2 flex items-center gap-1.5">
-            <label
-              className="cursor-pointer rounded-md border border-border bg-background/80 p-1 backdrop-blur"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <input
-                type="checkbox"
-                checked={selected}
-                onChange={onToggle}
-                className="h-3.5 w-3.5 accent-primary"
-                aria-label={`Select ${entry.title}`}
-              />
-            </label>
-            <button
-              onPointerDown={(e) => controls.start(e)}
-              title="Drag to reorder"
-              className="cursor-grab rounded-md border border-border bg-background/80 px-1.5 py-1 font-mono text-[10px] text-muted-foreground backdrop-blur hover:text-foreground active:cursor-grabbing"
-            >
-              ⋮⋮
-            </button>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-[#141210]/30 to-transparent" />
+          <label
+            className="absolute left-2 top-2 flex cursor-pointer items-center gap-1 rounded border-2 border-amber-900/40 bg-[#141210]/90 p-1 backdrop-blur"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggle}
+              className="h-3.5 w-3.5 accent-amber-500"
+              aria-label={`Select ${entry.title}`}
+            />
+          </label>
           {entry.alias && (
-            <span className="absolute right-2 top-2 rounded-md border border-primary/40 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary backdrop-blur">
+            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[10px] text-stone-400 backdrop-blur">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
@@ -1011,13 +971,13 @@ function VaultCard({
                 className="h-3.5 w-3.5 rounded-sm"
               />
             )}
-            <span className="font-mono">{hostOf(entry.destination)}</span>
+            <span className="font-mono font-medium">{hostOf(entry.destination)}</span>
           </div>
         </div>
       )}
 
-      <div className="p-3">
-        <div className="flex items-start gap-2">
+      <div className="p-4">
+        <div className="flex items-start gap-3">
           {isList && (
             <>
               <label
@@ -1028,17 +988,10 @@ function VaultCard({
                   type="checkbox"
                   checked={selected}
                   onChange={onToggle}
-                  className="h-4 w-4 accent-primary"
+                  className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <button
-                onPointerDown={(e) => controls.start(e)}
-                className="mt-1 cursor-grab font-mono text-xs text-muted-foreground hover:text-foreground active:cursor-grabbing"
-                title="Drag"
-              >
-                ⋮⋮
-              </button>
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
                 {entry.image ? (
                   <img
                     src={entry.image}
@@ -1049,7 +1002,7 @@ function VaultCard({
                     }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center font-mono text-xs text-muted-foreground">
+                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
                     {entry.title.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -1057,77 +1010,76 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+            <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug text-amber-50">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block truncate font-mono text-[11px] text-primary hover:underline"
+              className="mt-1 block truncate font-mono text-[11px] font-medium text-amber-400 hover:underline"
             >
               {entry.shortUrl}
             </a>
+            {isList && entry.alias && (
+              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-amber-500">
+                /{entry.alias}
+              </span>
+            )}
           </div>
+          <button
+            onClick={onDelete}
+            className="rounded p-1 font-mono text-xs text-stone-600 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+            title="Delete"
+          >
+            ✕
+          </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-1 text-[11px]">
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px]">
           <button
             onClick={onCopyAll}
-            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 font-medium text-primary transition hover:bg-primary/20"
+            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
           >
-            ⧉ Copy
+            ⧉ Copy all
           </button>
           <button
             onClick={() => onCopyField(entry.shortUrl)}
-            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Short
           </button>
           <button
             onClick={() => onCopyField(entry.destination)}
-            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Dest
           </button>
           {entry.image && (
             <button
               onClick={() => onCopyField(entry.image)}
-              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
             >
               Img
             </button>
           )}
           <button
             onClick={onToggleQr}
-            className={`rounded-md border px-2 py-1 transition ${
+            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
               qrOpen
-                ? "border-primary bg-primary/20 text-primary"
-                : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+                ? "border-amber-500 bg-amber-500/20 text-amber-300"
+                : "border-amber-900/30 bg-[#0f0d0b] text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
             }`}
             title="QR code"
           >
             ▦ QR
           </button>
-          <button
-            onClick={onDelete}
-            className="ml-auto rounded-md px-2 py-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
-          >
-            ✕
-          </button>
         </div>
 
-        <AnimatePresence>
-          {qrOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="mt-3 overflow-hidden"
-            >
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
-                <div className="rounded-md bg-white p-2">
+        {qrOpen && (
+          <div className="mt-3">
+            <div className="flex items-center gap-3 rounded-lg border-2 border-amber-900/40 bg-[#0f0d0b] p-3">
+              <div className="rounded bg-white p-2">
                   <QRCodeSVG
                     value={entry.shortUrl}
                     size={96}
@@ -1135,26 +1087,25 @@ function VaultCard({
                     bgColor="#ffffff"
                     fgColor="#000000"
                   />
-                </div>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Scannable short link
-                  </div>
-                  <div className="truncate font-mono text-[11px] text-primary">
-                    {entry.shortUrl}
-                  </div>
-                  <button
-                    onClick={() => onCopyField(entry.shortUrl)}
-                    className="mt-1 rounded-md border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
-                  >
-                    Copy link
-                  </button>
-                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                  Scannable short link
+                </div>
+                <div className="truncate font-mono text-[11px] text-amber-400">
+                  {entry.shortUrl}
+                </div>
+                <button
+                  onClick={() => onCopyField(entry.shortUrl)}
+                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                >
+                  Copy link
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </Reorder.Item>
+    </div>
   );
 }
