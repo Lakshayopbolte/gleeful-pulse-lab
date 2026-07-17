@@ -5,17 +5,19 @@ export const shortenUrl = createServerFn({ method: "POST" })
     if (!input || typeof input.url !== "string" || input.url.trim().length === 0) {
       throw new Error("A destination URL is required");
     }
+    let raw = input.url.trim();
+    if (!/^https?:\/\//i.test(raw)) raw = `https://${raw}`;
     try {
       // eslint-disable-next-line no-new
-      new URL(input.url.trim());
+      new URL(raw);
     } catch {
-      throw new Error("Destination must be a valid URL (include https://)");
+      throw new Error("Destination must be a valid URL");
     }
     const alias = typeof input.alias === "string" ? input.alias.trim() : "";
     if (alias && !/^[a-zA-Z0-9_-]{3,30}$/.test(alias)) {
       throw new Error("Alias must be 3–30 chars, letters/numbers/-/_ only");
     }
-    return { url: input.url.trim(), alias };
+    return { url: raw, alias };
   })
   .handler(async ({ data }) => {
     const token = process.env.AROLINKS_API_TOKEN;
