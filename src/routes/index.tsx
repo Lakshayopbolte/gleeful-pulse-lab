@@ -719,6 +719,22 @@ function Workspace() {
                 <span aria-hidden>⧉</span>
                 Copy {selected.size > 0 ? `${selected.size}` : "all"} as {copyFormat.toUpperCase()}
               </button>
+              <div className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 p-0.5">
+                {(["grid", "list"] as const).map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDensity(d)}
+                    title={`${d} view`}
+                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
+                      density === d
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {d === "grid" ? "▦" : "≡"}
+                  </button>
+                ))}
+              </div>
               {selected.size > 0 && (
                 <button
                   onClick={clearSelection}
