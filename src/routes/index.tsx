@@ -654,133 +654,129 @@ function Workspace() {
           </section>
 
           {/* Vault */}
-          <section className="rounded-2xl border border-border glass-panel p-6 shadow-[var(--shadow-card)]">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <section className="relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
               <div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
                   Vault
-                  <span className="ml-2 font-mono text-xs text-muted-foreground">
-                    · {filtered.length}
+                  <span className="ml-2 font-mono text-xs font-medium text-stone-500">
+                    [{String(filtered.length).padStart(2, "0")}
                     {selected.size > 0 && (
-                      <span className="ml-1 text-primary">/ {selected.size} picked</span>
+                      <span className="text-amber-500"> / {selected.size} picked</span>
                     )}
+                    ]
                   </span>
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  Select rows → pick a format → copy the whole payload
+                <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+                  02 · Retrieve
                 </p>
               </div>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                id="vault-search"
-                placeholder="Search…  ⌘K"
-                className="input h-9 w-48 text-sm"
-              />
-            </div>
-
-            {/* Bulk toolbar */}
-            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-background/40 p-2">
-              <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground">
-                <input
-                  type="checkbox"
-                  checked={allVisibleSelected}
-                  onChange={toggleSelectAll}
-                  disabled={filtered.length === 0}
-                  className="accent-primary"
-                />
-                <span className="font-mono uppercase tracking-widest">
-                  {allVisibleSelected ? "Unselect all" : "Select all"}
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-600">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </span>
-              </label>
-              <div className="mx-1 h-5 w-px bg-border" />
-              <div className="flex items-center gap-1 rounded-md border border-border bg-secondary/40 p-0.5">
-                {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setCopyFormat(f)}
-                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
-                      copyFormat === f
-                        ? "bg-primary text-primary-foreground shadow-[var(--shadow-glow)]"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  id="vault-search"
+                  placeholder="Search  ⌘K"
+                  className="input h-11 w-56 pl-9 text-sm"
+                />
               </div>
-              <button
-                onClick={copySelected}
-                disabled={filtered.length === 0}
-                className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-[image:var(--gradient-hero)] px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-[var(--shadow-glow)] transition hover:brightness-110 disabled:opacity-40"
-              >
-                <span aria-hidden>⧉</span>
-                Copy {selected.size > 0 ? `${selected.size}` : "all"} as {copyFormat.toUpperCase()}
-              </button>
-              <div className="flex items-center gap-0.5 rounded-md border border-border bg-secondary/40 p-0.5">
-                {(["grid", "list"] as const).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDensity(d)}
-                    title={`${d} view`}
-                    className={`rounded px-2 py-1 font-mono text-[10px] uppercase tracking-widest transition ${
-                      density === d
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {d === "grid" ? "▦" : "≡"}
-                  </button>
-                ))}
-              </div>
-              {selected.size > 0 && (
-                <button
-                  onClick={clearSelection}
-                  className="text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"
-                >
-                  Clear
-                </button>
-              )}
             </div>
 
-            <AnimatePresence>
-              {flash && (
-                <motion.div
-                  key={flash}
-                  initial={{ opacity: 0, y: -6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                  transition={{ duration: 0.18 }}
-                  className="mb-3 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-primary"
-                >
-                  ✓ {flash} copied to clipboard
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 py-16 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-secondary/50 font-mono text-lg text-muted-foreground">
-                  ∅
+            <div className="p-6 sm:p-8">
+              {/* Bulk toolbar */}
+              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-2">
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-stone-400 hover:text-amber-200">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleSelectAll}
+                    disabled={filtered.length === 0}
+                    className="accent-amber-500"
+                  />
+                  <span className="font-mono font-bold uppercase tracking-widest">
+                    {allVisibleSelected ? "Unselect" : "Select all"}
+                  </span>
+                </label>
+                <div className="mx-1 h-5 w-px bg-amber-900/40" />
+                <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                  {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCopyFormat(f)}
+                      className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                        copyFormat === f
+                          ? "bg-amber-500 text-black"
+                          : "text-stone-500 hover:text-amber-200"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {entries.length === 0
-                    ? "No links saved yet — start with your first short."
-                    : "No matches for that search."}
-                </p>
+                <div className="ml-auto flex items-center gap-2">
+                  <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                    {(["grid", "list"] as const).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setDensity(d)}
+                        title={`${d} view`}
+                        className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                          density === d
+                            ? "bg-amber-200 text-black"
+                            : "text-stone-500 hover:text-amber-200"
+                        }`}
+                      >
+                        {d === "grid" ? "▦" : "≡"}
+                      </button>
+                    ))}
+                  </div>
+                  {selected.size > 0 && (
+                    <button
+                      onClick={clearSelection}
+                      className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={copySelected}
+                    disabled={filtered.length === 0}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-2 font-display text-xs font-bold text-black shadow-[0_3px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <span aria-hidden>⧉</span>
+                    Copy {selected.size > 0 ? selected.size : "all"} · {copyFormat.toUpperCase()}
+                  </button>
+                </div>
               </div>
-            ) : (
-              <Reorder.Group
-                axis="y"
-                values={entries}
-                onReorder={setEntries}
-                className={
-                  density === "grid"
-                    ? "grid gap-3 sm:grid-cols-2"
-                    : "space-y-2"
-                }
-              >
-                <AnimatePresence initial={false}>
+
+              {flash && (
+                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-400">
+                  ✓ {flash} copied to clipboard
+                </div>
+              )}
+
+              {filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
+                    ∅
+                  </div>
+                  <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+                    {entries.length === 0
+                      ? "Vault empty — mint your first short link"
+                      : "No matches for that search"}
+                  </p>
+                </div>
+              ) : (
+                <div
+                  className={
+                    density === "grid"
+                      ? "grid gap-4 sm:grid-cols-2"
+                      : "space-y-3"
+                  }
+                >
                   {filtered.map((e) => (
                     <VaultCard
                       key={e.id}
@@ -799,9 +795,9 @@ function Workspace() {
                       faviconFor={faviconFor}
                     />
                   ))}
-                </AnimatePresence>
-              </Reorder.Group>
-            )}
+                </div>
+              )}
+            </div>
           </section>
         </div>
 
