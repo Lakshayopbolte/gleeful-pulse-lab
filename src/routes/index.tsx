@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { shortenUrl } from "@/lib/shorten.functions";
 
@@ -486,7 +486,7 @@ function Field({
   label: string;
   hint?: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <label className="block">
