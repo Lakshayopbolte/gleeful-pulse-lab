@@ -879,3 +879,255 @@ function Stat({ label, value }: { label: string; value: number }) {
     </div>
   );
 }
+
+function VaultCard({
+  entry,
+  density,
+  selected,
+  onToggle,
+  onCopyAll,
+  onCopyField,
+  onDelete,
+  qrOpen,
+  onToggleQr,
+  hostOf,
+  faviconFor,
+}: {
+  entry: Entry;
+  density: "grid" | "list";
+  selected: boolean;
+  onToggle: () => void;
+  onCopyAll: () => void;
+  onCopyField: (v: string) => void;
+  onDelete: () => void;
+  qrOpen: boolean;
+  onToggleQr: () => void;
+  hostOf: (u: string) => string;
+  faviconFor: (u: string) => string;
+}) {
+  const controls = useDragControls();
+  const isList = density === "list";
+
+  return (
+    <Reorder.Item
+      value={entry}
+      dragListener={false}
+      dragControls={controls}
+      layout
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 20, scale: 0.96 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
+      whileDrag={{ scale: 1.02, zIndex: 30 }}
+      className={`group relative overflow-hidden rounded-xl border backdrop-blur transition ${
+        selected
+          ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_var(--color-primary)]"
+          : "border-border bg-background/60 hover:border-primary/40 hover:shadow-[0_10px_40px_-20px_var(--color-primary)]"
+      }`}
+    >
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px opacity-0 transition group-hover:opacity-100"
+        style={{ background: "var(--gradient-hero)" }}
+      />
+
+      {/* Cover */}
+      {!isList && (
+        <div className="relative h-32 w-full overflow-hidden border-b border-border/60 bg-secondary">
+          {entry.image ? (
+            <img
+              src={entry.image}
+              alt=""
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              onError={(ev) => {
+                (ev.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          ) : (
+            <div
+              className="h-full w-full"
+              style={{ background: "var(--gradient-mesh)" }}
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent" />
+          <div className="absolute left-2 top-2 flex items-center gap-1.5">
+            <label
+              className="cursor-pointer rounded-md border border-border bg-background/80 p-1 backdrop-blur"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={selected}
+                onChange={onToggle}
+                className="h-3.5 w-3.5 accent-primary"
+                aria-label={`Select ${entry.title}`}
+              />
+            </label>
+            <button
+              onPointerDown={(e) => controls.start(e)}
+              title="Drag to reorder"
+              className="cursor-grab rounded-md border border-border bg-background/80 px-1.5 py-1 font-mono text-[10px] text-muted-foreground backdrop-blur hover:text-foreground active:cursor-grabbing"
+            >
+              ⋮⋮
+            </button>
+          </div>
+          {entry.alias && (
+            <span className="absolute right-2 top-2 rounded-md border border-primary/40 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary backdrop-blur">
+              /{entry.alias}
+            </span>
+          )}
+          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            {faviconFor(entry.destination) && (
+              <img
+                src={faviconFor(entry.destination)}
+                alt=""
+                className="h-3.5 w-3.5 rounded-sm"
+              />
+            )}
+            <span className="font-mono">{hostOf(entry.destination)}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="p-3">
+        <div className="flex items-start gap-2">
+          {isList && (
+            <>
+              <label
+                className="mt-1 cursor-pointer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={onToggle}
+                  className="h-4 w-4 accent-primary"
+                />
+              </label>
+              <button
+                onPointerDown={(e) => controls.start(e)}
+                className="mt-1 cursor-grab font-mono text-xs text-muted-foreground hover:text-foreground active:cursor-grabbing"
+                title="Drag"
+              >
+                ⋮⋮
+              </button>
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-secondary">
+                {entry.image ? (
+                  <img
+                    src={entry.image}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(ev) => {
+                      (ev.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-mono text-xs text-muted-foreground">
+                    {entry.title.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+              {entry.title}
+            </h3>
+            <a
+              href={entry.shortUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block truncate font-mono text-[11px] text-primary hover:underline"
+            >
+              {entry.shortUrl}
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1 text-[11px]">
+          <button
+            onClick={onCopyAll}
+            className="inline-flex items-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-2 py-1 font-medium text-primary transition hover:bg-primary/20"
+          >
+            ⧉ Copy
+          </button>
+          <button
+            onClick={() => onCopyField(entry.shortUrl)}
+            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+          >
+            Short
+          </button>
+          <button
+            onClick={() => onCopyField(entry.destination)}
+            className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+          >
+            Dest
+          </button>
+          {entry.image && (
+            <button
+              onClick={() => onCopyField(entry.image)}
+              className="rounded-md border border-border px-2 py-1 text-muted-foreground hover:border-primary/60 hover:text-primary"
+            >
+              Img
+            </button>
+          )}
+          <button
+            onClick={onToggleQr}
+            className={`rounded-md border px-2 py-1 transition ${
+              qrOpen
+                ? "border-primary bg-primary/20 text-primary"
+                : "border-border text-muted-foreground hover:border-primary/60 hover:text-primary"
+            }`}
+            title="QR code"
+          >
+            ▦ QR
+          </button>
+          <button
+            onClick={onDelete}
+            className="ml-auto rounded-md px-2 py-1 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-destructive"
+          >
+            ✕
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {qrOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-3 overflow-hidden"
+            >
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 p-3">
+                <div className="rounded-md bg-white p-2">
+                  <QRCodeSVG
+                    value={entry.shortUrl}
+                    size={96}
+                    level="M"
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                  />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Scannable short link
+                  </div>
+                  <div className="truncate font-mono text-[11px] text-primary">
+                    {entry.shortUrl}
+                  </div>
+                  <button
+                    onClick={() => onCopyField(entry.shortUrl)}
+                    className="mt-1 rounded-md border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
+                  >
+                    Copy link
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </Reorder.Item>
+  );
+}
