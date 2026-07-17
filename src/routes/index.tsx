@@ -74,6 +74,9 @@ function Workspace() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [query, setQuery] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [copyFormat, setCopyFormat] = useState<"json" | "csv" | "markdown" | "text" | "html">("json");
+  const [flash, setFlash] = useState<string | null>(null);
 
   useEffect(() => {
     setEntries(loadEntries());
@@ -100,6 +103,88 @@ function Workspace() {
         .includes(q),
     );
   }, [entries, query]);
+
+  const selectedEntries = useMemo(
+    () => filtered.filter((e) => selected.has(e.id)),
+    [filtered, selected],
+  );
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((e) => selected.has(e.id));
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map((e) => e.id)));
+    }
+  }
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function formatEntries(list: Entry[], fmt: typeof copyFormat): string {
+    if (list.length === 0) return "";
+    if (fmt === "json") return JSON.stringify(list, null, 2);
+    if (fmt === "csv") {
+      const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
+      const head = ["title", "alias", "image", "destination", "shortUrl"].join(",");
+      const rows = list.map((e) =>
+        [e.title, e.alias, e.image, e.destination, e.shortUrl].map(esc).join(","),
+      );
+      return [head, ...rows].join("\n");
+    }
+    if (fmt === "markdown") {
+      const head = "| Title | Alias | Short | Destination | Image |\n|---|---|---|---|---|";
+      const rows = list.map(
+        (e) =>
+          `| ${e.title} | \`${e.alias}\` | ${e.shortUrl} | ${e.destination} | ${e.image} |`,
+      );
+      return [head, ...rows].join("\n");
+    }
+    if (fmt === "html") {
+      return list
+        .map(
+          (e) =>
+            `<a href="${e.shortUrl}" data-alias="${e.alias}" data-image="${e.image}" data-destination="${e.destination}">${e.title}</a>`,
+        )
+        .join("\n");
+    }
+    // text
+    return list
+      .map(
+        (e) =>
+          `Title: ${e.title}\nAlias: ${e.alias}\nImage: ${e.image}\nDestination: ${e.destination}\nShort: ${e.shortUrl}`,
+      )
+      .join("\n\n---\n\n");
+  }
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus({ kind: "success", message: `${label} copied` });
+      setFlash(label);
+      window.setTimeout(() => setFlash((f) => (f === label ? null : f)), 1400);
+    } catch {
+      setStatus({ kind: "error", message: "Clipboard blocked" });
+    }
+  }
+
+  function copyOne(e: Entry) {
+    copyText(formatEntries([e], copyFormat), `Entry · ${copyFormat.toUpperCase()}`);
+  }
+  function copySelected() {
+    const list = selectedEntries.length ? selectedEntries : filtered;
+    if (list.length === 0) return;
+    copyText(formatEntries(list, copyFormat), `${list.length} × ${copyFormat.toUpperCase()}`);
+  }
 
   function resetForm() {
     setTitle("");
@@ -173,9 +258,7 @@ function Workspace() {
   }
 
   function copy(text: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      setStatus({ kind: "success", message: "Copied to clipboard" });
-    });
+    copyText(text, "Value");
   }
 
   function exportJson() {
