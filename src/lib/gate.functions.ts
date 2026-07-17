@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
+import { useSession, getWebRequest } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 export type LinkEntry = {
@@ -38,6 +38,23 @@ async function getSession() {
   return useSession<GateSession>(sessionConfig());
 }
 
+// Preview / local dev bypass — vault opens without a password on the
+// Lovable preview host or localhost. Published production stays gated.
+function isPreviewHost(): boolean {
+  try {
+    const req = getWebRequest();
+    const host = req?.headers.get("host") ?? "";
+    return (
+      host.includes("id-preview--") ||
+      host.includes("-dev.lovable.app") ||
+      host.startsWith("localhost") ||
+      host.startsWith("127.0.0.1")
+    );
+  } catch {
+    return false;
+  }
+}
+
 function rowToEntry(r: {
   id: string;
   title: string;
@@ -60,7 +77,8 @@ function rowToEntry(r: {
 
 export const getGateState = createServerFn({ method: "GET" }).handler(async () => {
   const session = await getSession();
-  if (!session.data.unlocked) {
+  const bypass = isPreviewHost();
+  if (!session.data.unlocked && !bypass) {
     return { unlocked: false as const };
   }
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -71,7 +89,7 @@ export const getGateState = createServerFn({ method: "GET" }).handler(async () =
   if (error) throw new Error(error.message);
   return {
     unlocked: true as const,
-    user: session.data.user ?? "",
+    user: session.data.user ?? (bypass ? "Lakshay" : ""),
     entries: (data ?? []).map(rowToEntry),
   };
 });
@@ -97,7 +115,7 @@ export const lockSite = createServerFn({ method: "POST" }).handler(async () => {
 
 async function requireUnlocked() {
   const session = await getSession();
-  if (!session.data.unlocked) throw new Error("Locked");
+  if (!session.data.unlocked && !isPreviewHost()) throw new Error("Locked");
 }
 
 export const saveLink = createServerFn({ method: "POST" })
