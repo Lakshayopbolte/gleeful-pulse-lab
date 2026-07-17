@@ -524,6 +524,19 @@ function WorkspaceInner({
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-10">
+        {view === "trash" ? (
+          <TrashPanel
+            entries={trashEntries}
+            loading={trashLoading}
+            onRestore={restoreEntry}
+            onPurge={purgeEntry}
+            onEmpty={handleEmptyTrash}
+            onBack={() => setView("vault")}
+            hostOf={hostOf}
+            faviconFor={faviconFor}
+          />
+        ) : (
+          <>
         {/* Hero */}
         <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
           <div>
@@ -753,6 +766,20 @@ function WorkspaceInner({
                   {status.message}
                 </p>
               )}
+              {dupWarning && (
+                <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/10 p-3">
+                  <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                    ⚠ Duplicate destination
+                  </div>
+                  <div className="text-xs text-amber-100/90">
+                    Already saved as <span className="font-semibold">“{dupWarning.title}”</span>
+                    {dupWarning.alias && (
+                      <span className="ml-1 font-mono text-amber-400">/{dupWarning.alias}</span>
+                    )}
+                    . Click <span className="font-semibold">Shorten &amp; save</span> again to add anyway, or clear the destination.
+                  </div>
+                </div>
+              )}
               {status.kind === "success" && (
                 <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
                   ✓ {status.message}
@@ -936,6 +963,9 @@ function WorkspaceInner({
           </section>
         </div>
 
+          </>
+        )}
+
         <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground sm:flex-row">
           <span>FREEKITAAB · workspace</span>
           <span>powered by arolinks</span>
@@ -943,6 +973,64 @@ function WorkspaceInner({
       </main>
 
       <style>{`
+        /* Apple-style translucent nav */
+        .apple-nav {
+          background: color-mix(in oklab, #0a0a0a 72%, transparent);
+          -webkit-backdrop-filter: saturate(180%) blur(24px);
+          backdrop-filter: saturate(180%) blur(24px);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .apple-title { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui; }
+        .apple-segment {
+          display: inline-flex;
+          padding: 2px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 9px;
+        }
+        .segment {
+          display: inline-flex; align-items: center;
+          padding: 4px 12px;
+          font-size: 12.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.72);
+          border-radius: 7px;
+          transition: background 0.15s, color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .segment:hover { color: rgba(255,255,255,0.92); }
+        .segment-active {
+          background: rgba(255,255,255,0.11);
+          color: #fff;
+          box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .apple-pill {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          font-size: 11.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.82);
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.08);
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-btn {
+          padding: 5px 12px;
+          border-radius: 7px;
+          font-size: 12.5px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.9);
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.08);
+          transition: background 0.15s, color 0.15s, transform 0.05s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-btn:hover { background: rgba(255,255,255,0.14); }
+        .apple-btn:active { transform: translateY(0.5px); }
+        .apple-btn:disabled { opacity: 0.4; }
+        .apple-btn-danger:hover { background: rgba(239,68,68,0.18); color: #fecaca; }
+
         .input {
           width: 100%;
           height: 3rem;
