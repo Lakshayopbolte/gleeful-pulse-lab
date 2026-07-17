@@ -40,6 +40,7 @@ function Workspace() {
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
+  const [aliasTouched, setAliasTouched] = useState(false);
   const [destination, setDestination] = useState("");
   const [image, setImage] = useState("");
   const [shortUrl, setShortUrl] = useState("");
@@ -64,6 +65,20 @@ function Workspace() {
     if (hydrated) saveEntries(entries);
   }, [entries, hydrated]);
 
+  // Auto-derive alias from title until the user edits alias manually
+  useEffect(() => {
+    if (aliasTouched) return;
+    const slug = title
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .slice(0, 24);
+    setAlias(slug);
+  }, [title, aliasTouched]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return entries;
@@ -78,19 +93,28 @@ function Workspace() {
   function resetForm() {
     setTitle("");
     setAlias("");
+    setAliasTouched(false);
     setDestination("");
     setImage("");
     setShortUrl("");
   }
 
+  function normalizeUrl(u: string) {
+    const v = u.trim();
+    if (!v) return "";
+    return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+  }
+
   async function handleShorten() {
-    if (!destination.trim()) {
+    const dest = normalizeUrl(destination);
+    if (!dest) {
       setStatus({ kind: "error", message: "Enter a destination link first" });
       return;
     }
     setStatus({ kind: "shortening" });
     try {
-      const res = await shorten({ data: { url: destination.trim(), alias: alias.trim() } });
+      const res = await shorten({ data: { url: dest, alias: alias.trim() } });
+      setDestination(dest);
       setShortUrl(res.shortUrl);
       setStatus({ kind: "success", message: "Short link generated" });
     } catch (err) {
@@ -102,7 +126,8 @@ function Workspace() {
   }
 
   async function handleSave() {
-    if (!title.trim() || !destination.trim()) {
+    const dest = normalizeUrl(destination);
+    if (!title.trim() || !dest) {
       setStatus({ kind: "error", message: "Title and destination are required" });
       return;
     }
@@ -110,14 +135,14 @@ function Workspace() {
     try {
       let finalShort = shortUrl;
       if (!finalShort) {
-        const res = await shorten({ data: { url: destination.trim(), alias: alias.trim() } });
+        const res = await shorten({ data: { url: dest, alias: alias.trim() } });
         finalShort = res.shortUrl;
       }
       const entry: Entry = {
         id: crypto.randomUUID(),
         title: title.trim(),
         alias: alias.trim(),
-        destination: destination.trim(),
+        destination: dest,
         image: image.trim(),
         shortUrl: finalShort,
         createdAt: Date.now(),
@@ -251,7 +276,10 @@ function Workspace() {
                 <Field label="Alias" hint="a-z 0-9 _ -">
                   <input
                     value={alias}
-                    onChange={(e) => setAlias(e.target.value)}
+                    onChange={(e) => {
+                      setAliasTouched(true);
+                      setAlias(e.target.value);
+                    }}
                     placeholder="phy-ch3"
                     className="input font-mono"
                   />
