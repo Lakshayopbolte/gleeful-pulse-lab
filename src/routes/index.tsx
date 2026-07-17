@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
