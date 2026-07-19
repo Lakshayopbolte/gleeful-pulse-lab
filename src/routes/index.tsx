@@ -118,6 +118,73 @@ function WorkspaceInner({
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
 
+  // Bulk import
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number; failed: number }>({ done: 0, total: 0, failed: 0 });
+
+  async function pasteDestination() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        setStatus({ kind: "error", message: "Clipboard is empty" });
+        return;
+      }
+      setDestination(text.trim());
+      setFlash("Pasted from clipboard");
+      window.setTimeout(() => setFlash((f) => (f === "Pasted from clipboard" ? null : f)), 1400);
+    } catch {
+      setStatus({ kind: "error", message: "Clipboard blocked — allow permission" });
+    }
+  }
+
+  async function handleBulkImport() {
+    const lines = importText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (lines.length === 0) return;
+    setImportBusy(true);
+    setImportProgress({ done: 0, total: lines.length, failed: 0 });
+    let failed = 0;
+    const existing = new Set(entries.map((e) => e.destination.replace(/\/+$/, "").toLowerCase()));
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      // Support "Title | url" or "Title,url" or bare url
+      let t = "";
+      let url = raw;
+      const sep = raw.match(/^(.*?)\s*[|,\t]\s*(https?:\S+|\S+\.\S+.*)$/i);
+      if (sep) { t = sep[1].trim(); url = sep[2].trim(); }
+      const dest = normalizeUrl(url);
+      if (!dest) { failed++; setImportProgress((p) => ({ ...p, done: i + 1, failed })); continue; }
+      const norm = dest.replace(/\/+$/, "").toLowerCase();
+      if (existing.has(norm)) { setImportProgress((p) => ({ ...p, done: i + 1 })); continue; }
+      const finalTitle = t || hostOf(dest);
+      const finalAlias = makeShortAlias(finalTitle);
+      try {
+        const res = await shorten({ data: { url: dest, alias: finalAlias } });
+        const saved = await saveLinkFn({
+          data: {
+            title: finalTitle,
+            alias: finalAlias,
+            destination: dest,
+            image: "",
+            shortUrl: res.shortUrl,
+          },
+        });
+        setEntries((prev) => [saved, ...prev]);
+        existing.add(norm);
+      } catch {
+        failed++;
+      }
+      setImportProgress({ done: i + 1, total: lines.length, failed });
+    }
+    setImportBusy(false);
+    setImportText("");
+    setStatus({ kind: "success", message: `Imported ${lines.length - failed}/${lines.length}` });
+  }
+
   async function loadTrash() {
     setTrashLoading(true);
     try {
@@ -537,44 +604,100 @@ function WorkspaceInner({
           />
         ) : (
           <>
-        {/* Hero */}
-        <section className="mb-12 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary pulse-dot" /> arolinks · live
-            </div>
-            <h1 className="text-5xl font-bold leading-[1.02] tracking-tight md:text-7xl">
-              Shorten. Tag.{" "}
-              <span className="text-gradient italic">Vault.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Paste a destination, mint a short link, attach title & artwork,
-              and pipe the whole record into your next project.
-            </p>
+        {/* Quick actions bar */}
+        <section className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-900/30 bg-[#141210]/70 px-4 py-3 backdrop-blur">
+          <div className="flex items-center gap-4">
+            <Stat label="Entries" value={entries.length} />
+            <div className="h-8 w-px bg-amber-900/40" />
+            <Stat label="Aliased" value={entries.filter((e) => e.alias).length} />
+            <div className="h-8 w-px bg-amber-900/40" />
+            <Stat label="With art" value={entries.filter((e) => e.image).length} />
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border glass-panel p-5 shadow-[var(--shadow-card)]">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[image:var(--gradient-hero)] opacity-20 blur-3xl" />
-            <div className="flex items-center justify-between">
-              <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                Endpoint
-              </div>
-              <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-primary">
-                200 · OK
-              </span>
-            </div>
-            <div className="mt-2 font-mono text-sm text-foreground">
-              <span className="text-muted-foreground">GET </span>arolinks.com/api
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <Stat label="Entries" value={entries.length} />
-              <Stat label="Aliased" value={entries.filter((e) => e.alias).length} />
-              <Stat
-                label="With art"
-                value={entries.filter((e) => e.image).length}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setImportOpen((v) => !v)}
+              className="flex items-center gap-2 rounded-md border-2 border-amber-500/60 bg-amber-500/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-amber-300 transition hover:bg-amber-500/20"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Import
+            </button>
           </div>
         </section>
+
+        {importOpen && (
+          <section className="mb-8 rounded-xl border-2 border-amber-500/40 bg-[#141210] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-lg font-extrabold text-amber-50">Bulk import</h3>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-600/70">
+                  One per line · <span className="text-amber-400">Title | url</span> or just url
+                </p>
+              </div>
+              <button
+                onClick={() => setImportOpen(false)}
+                className="rounded border border-amber-900/40 px-2 py-1 text-xs text-stone-400 hover:text-amber-200"
+              >
+                ✕
+              </button>
+            </div>
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              rows={6}
+              placeholder={"Physics Ch 3 | https://example.com/phy-ch3.pdf\nhttps://example.com/notes.pdf\nChemistry Notes, https://example.com/chem.pdf"}
+              className="input w-full font-mono text-xs"
+              disabled={importBusy}
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div className="font-mono text-[11px] text-stone-500">
+                {importBusy ? (
+                  <>
+                    <span className="text-amber-400">{importProgress.done}</span>
+                    <span> / {importProgress.total} processed</span>
+                    {importProgress.failed > 0 && (
+                      <span className="ml-2 text-red-400">· {importProgress.failed} failed</span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {importText.split(/\r?\n/).filter((l) => l.trim()).length} link(s) ready
+                  </>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      const t = await navigator.clipboard.readText();
+                      setImportText((prev) => (prev ? prev + "\n" + t : t));
+                    } catch {
+                      setStatus({ kind: "error", message: "Clipboard blocked" });
+                    }
+                  }}
+                  disabled={importBusy}
+                  className="rounded-md border border-amber-900/40 px-3 py-2 font-mono text-xs font-bold uppercase tracking-widest text-stone-300 hover:border-amber-500/60 hover:text-amber-200"
+                >
+                  Paste
+                </button>
+                <button
+                  onClick={handleBulkImport}
+                  disabled={importBusy || !importText.trim()}
+                  className="rounded-md bg-amber-500 px-5 py-2 font-mono text-xs font-bold uppercase tracking-widest text-black shadow-[0_3px_0_0_#92400e] transition hover:bg-amber-400 active:translate-y-0.5 active:shadow-none disabled:opacity-40"
+                >
+                  {importBusy ? "Importing…" : "Start import"}
+                </button>
+              </div>
+            </div>
+            {importBusy && (
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-amber-900/30">
+                <div
+                  className="h-full bg-amber-500 transition-all"
+                  style={{ width: `${(importProgress.done / Math.max(1, importProgress.total)) * 100}%` }}
+                />
+              </div>
+            )}
+          </section>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
           {/* Composer */}
@@ -727,6 +850,15 @@ function WorkspaceInner({
                     placeholder="https://example.com/long/path"
                     className="input flex-1"
                   />
+                  <button
+                    type="button"
+                    onClick={pasteDestination}
+                    className="btn-ghost-amber flex items-center gap-1.5 whitespace-nowrap px-4 font-mono text-xs font-bold uppercase tracking-wider"
+                    title="Paste from clipboard"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    Paste
+                  </button>
                   <button
                     onClick={handleShorten}
                     disabled={busy || !destination.trim()}
