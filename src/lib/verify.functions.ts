@@ -51,6 +51,12 @@ export const verifyShortLink = createServerFn({ method: "POST" })
       } else if (res.status === 404 || res.status === 410) {
         status = "broken";
         message = `Not found (${res.status})`;
+      } else if (res.status === 403 || res.status === 503 || res.status === 429) {
+        status = "live";
+        message = `Live (bot-protected by ${safeHost(data.shortUrl) || "host"})`;
+      } else if (res.status >= 200 && res.status < 400) {
+        status = "live";
+        message = `HTTP ${res.status}`;
       } else {
         status = "unknown";
         message = `HTTP ${res.status}`;
