@@ -472,7 +472,7 @@ function WorkspaceInner({
       destination: dest,
       image: imageVal,
       shortUrl: "",
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
     } as Entry;
     setEntries((prev) => [placeholder, ...prev]);
     setLiveStatus((m) => ({ ...m, [tempId]: { state: "checking", message: "Shortening…" } }));
