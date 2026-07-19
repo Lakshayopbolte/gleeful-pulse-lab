@@ -1508,34 +1508,28 @@ function VaultCard({
   const isList = density === "list";
 
   return (
-    <div
-      className={`group relative overflow-hidden rounded-lg border-2 bg-[#1c1917] transition-all ${
-        selected
-          ? "border-amber-500/70 shadow-[0_0_0_2px_rgba(245,158,11,0.15),0_8px_0_0_#92400e]"
-          : "border-amber-900/30 hover:border-amber-500/40 hover:-translate-y-0.5"
-      }`}
-    >
+    <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
       {/* Cover */}
       {!isList && (
-        <div className="relative h-36 w-full overflow-hidden border-b-2 border-amber-900/30 bg-[#0f0d0b]">
+        <div className="relative h-40 w-full overflow-hidden bg-[#0f0d0b]">
           {entry.image ? (
             <img
               src={entry.image}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
               onError={(ev) => {
                 (ev.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#292524] to-[#0f0d0b] font-display text-4xl font-extrabold text-amber-900/40">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/[0.04] to-black/40 apple-title text-[42px] font-semibold text-white/15">
               {entry.title.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-[#141210]/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0c0b] via-[#0d0c0b]/40 to-transparent" />
           <label
-            className="absolute left-2 top-2 flex cursor-pointer items-center gap-1 rounded border-2 border-amber-900/40 bg-[#141210]/90 p-1 backdrop-blur"
+            className="absolute left-2.5 top-2.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -1547,24 +1541,24 @@ function VaultCard({
             />
           </label>
           {entry.alias && (
-            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
+            <span className="absolute right-2.5 top-2.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[12px] text-stone-400 backdrop-blur">
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
                 alt=""
-                className="h-3.5 w-3.5 rounded-sm"
+                className="h-3.5 w-3.5 rounded-[3px]"
               />
             )}
-            <span className="font-mono font-medium">{hostOf(entry.destination)}</span>
+            <span className="font-medium">{hostOf(entry.destination)}</span>
           </div>
         </div>
       )}
 
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         <div className="flex items-start gap-3">
           {isList && (
             <>
@@ -1579,7 +1573,7 @@ function VaultCard({
                   className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0f0d0b]">
                 {entry.image ? (
                   <img
                     src={entry.image}
@@ -1590,7 +1584,7 @@ function VaultCard({
                     }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
+                  <div className="flex h-full w-full items-center justify-center apple-title text-sm font-semibold text-white/25">
                     {entry.title.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -1598,98 +1592,68 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-amber-50 sm:text-base">
+            <h3 className="apple-title line-clamp-2 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-white sm:text-[16px]">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1.5 block truncate font-mono text-[13px] font-medium text-amber-400 hover:underline"
+              className="mt-1.5 block truncate font-mono text-[12.5px] font-medium text-amber-400/90 hover:text-amber-300"
             >
               {entry.shortUrl}
             </a>
             {isList && entry.alias && (
-              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-500">
+              <span className="mt-1.5 inline-block rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] font-medium text-amber-300">
                 /{entry.alias}
               </span>
             )}
           </div>
           <button
             onClick={onDelete}
-            className="rounded p-1 font-mono text-xs text-stone-600 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+            className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-300"
             title="Delete"
+            aria-label="Delete"
           >
-            ✕
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[13px]">
-          <button
-            onClick={onCopyAll}
-            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
-          >
-            ⧉ Copy all
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <button onClick={onCopyAll} className="apple-chip apple-chip-primary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy all
           </button>
-          <button
-            onClick={() => onCopyField(entry.shortUrl)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-          >
-            Short
-          </button>
-          <button
-            onClick={() => onCopyField(entry.destination)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-          >
-            Dest
-          </button>
+          <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip">Short</button>
+          <button onClick={() => onCopyField(entry.destination)} className="apple-chip">Dest</button>
           {entry.image && (
-            <button
-              onClick={() => onCopyField(entry.image)}
-              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-            >
-              Img
-            </button>
+            <button onClick={() => onCopyField(entry.image)} className="apple-chip">Image</button>
           )}
           <button
             onClick={onToggleQr}
-            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-              qrOpen
-                ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                : "border-amber-900/30 bg-[#0f0d0b] text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-            }`}
+            className={`apple-chip ml-auto ${qrOpen ? "apple-chip-active" : ""}`}
             title="QR code"
           >
-            ▦ QR
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            QR
           </button>
         </div>
 
         {qrOpen && (
-          <div className="mt-3">
-            <div className="flex items-center gap-3 rounded-lg border-2 border-amber-900/40 bg-[#0f0d0b] p-3">
-              <div className="rounded bg-white p-2">
-                  <QRCodeSVG
-                    value={entry.shortUrl}
-                    size={96}
-                    level="M"
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                  />
+          <div className="mt-3.5 flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+            <div className="rounded-lg bg-white p-2 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <QRCodeSVG value={entry.shortUrl} size={92} level="M" bgColor="#ffffff" fgColor="#000000" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-white/40">
+                Scannable link
               </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="font-mono text-[12px] font-bold uppercase tracking-widest text-amber-600">
-                  Scannable short link
-                </div>
-                <div className="truncate font-mono text-[13px] text-amber-400">
-                  {entry.shortUrl}
-                </div>
-                <button
-                  onClick={() => onCopyField(entry.shortUrl)}
-                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[12px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
-                >
-                  Copy link
-                </button>
+              <div className="mt-1 truncate font-mono text-[13px] text-amber-300">
+                {entry.shortUrl}
               </div>
+              <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip mt-2">
+                Copy link
+              </button>
             </div>
           </div>
         )}
