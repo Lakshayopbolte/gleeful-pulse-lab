@@ -1060,28 +1060,32 @@ function WorkspaceInner({
               </div>
 
               {flash && (
-                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-400">
-                  ✓ {flash} copied to clipboard
+                <div className="apple-toast mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3.5 py-1.5 text-[13px] font-medium text-emerald-300">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  {flash}
                 </div>
               )}
 
               {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
-                    ∅
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/40">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   </div>
-                  <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+                  <p className="text-[15px] font-medium text-white/70">
+                    {entries.length === 0 ? "Your vault is empty" : "No matches"}
+                  </p>
+                  <p className="mt-1 text-[13px] text-white/40">
                     {entries.length === 0
-                      ? "Vault empty — mint your first short link"
-                      : "No matches for that search"}
+                      ? "Save your first short link above"
+                      : "Try a different search term"}
                   </p>
                 </div>
               ) : (
                 <div
                   className={
                     density === "grid"
-                      ? "grid gap-4 sm:grid-cols-2"
-                      : "space-y-3"
+                      ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                      : "space-y-2.5"
                   }
                 >
                   {filtered.map((e) => (
