@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
+import { verifyShortLink } from "@/lib/verify.functions";
 import {
   getGateState,
   unlockSite,
@@ -75,6 +76,7 @@ function WorkspaceInner({
   const runImageSearch = useServerFn(searchImages);
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
+  const verifyFn = useServerFn(verifyShortLink);
   const lockFn = useServerFn(lockSite);
   const getTrashFn = useServerFn(getTrash);
   const restoreLinkFn = useServerFn(restoreLink);
@@ -117,6 +119,40 @@ function WorkspaceInner({
 
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
+
+  // Live status per entry id (in-memory; verified on demand + after save)
+  type LiveStatus = {
+    state: "checking" | "live" | "broken" | "unknown";
+    message?: string;
+    latencyMs?: number;
+    checkedAt?: string;
+  };
+  const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
+
+  async function verifyEntry(id: string, shortUrl: string, destination: string) {
+    if (!shortUrl) return;
+    setLiveStatus((m) => ({ ...m, [id]: { ...(m[id] ?? {}), state: "checking" } }));
+    try {
+      const res = await verifyFn({ data: { shortUrl, destination } });
+      setLiveStatus((m) => ({
+        ...m,
+        [id]: {
+          state: res.status,
+          message: res.message,
+          latencyMs: res.latencyMs,
+          checkedAt: res.checkedAt,
+        },
+      }));
+    } catch (err) {
+      setLiveStatus((m) => ({
+        ...m,
+        [id]: {
+          state: "broken",
+          message: err instanceof Error ? err.message : "Verify failed",
+        },
+      }));
+    }
+  }
 
   // Bulk import
   const [importOpen, setImportOpen] = useState(false);
