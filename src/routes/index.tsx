@@ -1333,11 +1333,11 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-border bg-background/40 py-2">
-      <div className="font-display text-xl font-semibold text-foreground">
+    <div className="group relative flex min-w-[92px] items-center gap-3 rounded-xl border border-amber-900/40 bg-gradient-to-br from-amber-500/[0.06] to-transparent px-4 py-2.5 transition hover:border-amber-500/50">
+      <div className="font-display text-2xl font-bold leading-none text-amber-50 tabular-nums">
         {value}
       </div>
-      <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-amber-500/70">
         {label}
       </div>
     </div>
