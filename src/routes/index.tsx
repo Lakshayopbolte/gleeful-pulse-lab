@@ -1801,9 +1801,9 @@ function VaultCard({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <button onClick={onCopyAll} className="apple-chip apple-chip-primary">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy all
+          <button onClick={onCopyAll} className="apple-chip apple-chip-primary apple-chip-lg">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy everything
           </button>
           <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip">Short</button>
           <button onClick={() => onCopyField(entry.destination)} className="apple-chip">Dest</button>
