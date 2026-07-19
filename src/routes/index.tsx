@@ -1120,7 +1120,7 @@ function WorkspaceInner({
           </>
         )}
 
-        <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-[13px] uppercase tracking-[0.16em] text-muted-foreground sm:flex-row">
+        <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground sm:flex-row">
           <span>FREEKITAAB · workspace</span>
           <span>powered by arolinks</span>
         </footer>
@@ -1603,14 +1603,14 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug text-amber-50">
+            <h3 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-amber-50 sm:text-base">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block truncate font-mono text-[13px] font-medium text-amber-400 hover:underline"
+              className="mt-1.5 block truncate font-mono text-[13px] font-medium text-amber-400 hover:underline"
             >
               {entry.shortUrl}
             </a>
