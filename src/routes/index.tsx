@@ -1187,18 +1187,20 @@ function WorkspaceInner({
 
         .input {
           width: 100%;
-          height: 3rem;
-          border-radius: 0.5rem;
+          height: 3.25rem;
+          border-radius: 0.625rem;
           border: 2px solid rgb(120 53 15 / 0.3);
           background: #1c1917;
           padding: 0 1rem;
           color: rgb(254 243 199);
-          font-size: 0.9rem;
+          font-size: 1rem;
+          line-height: 1.25;
           outline: none;
-          transition: border-color 0.15s;
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
         .input:focus {
           border-color: rgb(245 158 11 / 0.55);
+          box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
         }
         .input::placeholder {
           color: rgb(120 113 108);
@@ -1240,13 +1242,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-mono text-[13px] font-bold uppercase tracking-widest text-amber-600">
+      <div className="mb-2.5 flex items-baseline justify-between">
+        <span className="font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
           {label}
           {required && <span className="ml-1 text-amber-500">*</span>}
         </span>
         {hint && (
-          <span className="font-mono text-[13px] font-medium text-stone-500">
+          <span className="font-mono text-[12px] font-medium text-stone-400">
             {hint}
           </span>
         )}
