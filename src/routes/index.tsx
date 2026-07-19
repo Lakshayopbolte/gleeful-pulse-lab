@@ -960,137 +960,132 @@ function WorkspaceInner({
           </section>
 
           {/* Vault */}
-          <section className="relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
+          <section className="apple-card relative overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
               <div>
-                <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
+                <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
                   Vault
-                  <span className="ml-2 font-mono text-xs font-medium text-stone-500">
-                    [{String(filtered.length).padStart(2, "0")}
+                  <span className="ml-2.5 text-[15px] font-medium tabular-nums text-white/40">
+                    {filtered.length}
                     {selected.size > 0 && (
-                      <span className="text-amber-500"> / {selected.size} picked</span>
+                      <span className="text-amber-400"> · {selected.size} selected</span>
                     )}
-                    ]
                   </span>
                 </h2>
-                <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
-                  02 · Retrieve
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Your saved short links
                 </p>
               </div>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-600">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <div className="apple-search relative">
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </span>
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   id="vault-search"
-                  placeholder="Search title, alias, url…  ⌘K"
-                  className="input h-11 w-72 text-sm"
-                  style={{ paddingLeft: "2.25rem", paddingRight: "2.25rem" }}
+                  placeholder="Search"
+                  className="apple-search-input"
                 />
-                {query && (
+                {query ? (
                   <button
                     onClick={() => setQuery("")}
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-500 hover:bg-amber-500/10 hover:text-amber-300"
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white/70 transition hover:bg-white/25 hover:text-white"
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   </button>
+                ) : (
+                  <kbd className="pointer-events-none absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10.5px] font-medium text-white/50">⌘K</kbd>
                 )}
               </div>
             </div>
 
-            <div className="p-6 sm:p-8">
+            <div className="p-5 sm:p-7">
               {/* Bulk toolbar */}
-              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-2">
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-stone-400 hover:text-amber-200">
+              <div className="apple-toolbar mb-6 flex flex-wrap items-center gap-3">
+                <label className="apple-check">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
                     onChange={toggleSelectAll}
                     disabled={filtered.length === 0}
-                    className="accent-amber-500"
                   />
-                  <span className="font-mono font-bold uppercase tracking-widest">
-                    {allVisibleSelected ? "Unselect" : "Select all"}
-                  </span>
+                  <span>{allVisibleSelected ? "Deselect all" : "Select all"}</span>
                 </label>
-                <div className="mx-1 h-5 w-px bg-amber-900/40" />
-                <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                <div className="apple-divider" />
+                <div className="apple-segment-sm">
                   {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setCopyFormat(f)}
-                      className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-                        copyFormat === f
-                          ? "bg-amber-500 text-black"
-                          : "text-stone-500 hover:text-amber-200"
-                      }`}
+                      className={`segment-sm ${copyFormat === f ? "segment-sm-active" : ""}`}
                     >
-                      {f}
+                      {f.toUpperCase()}
                     </button>
                   ))}
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                  <div className="apple-segment-sm">
                     {(["grid", "list"] as const).map((d) => (
                       <button
                         key={d}
                         onClick={() => setDensity(d)}
                         title={`${d} view`}
-                        className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-                          density === d
-                            ? "bg-amber-200 text-black"
-                            : "text-stone-500 hover:text-amber-200"
-                        }`}
+                        className={`segment-sm ${density === d ? "segment-sm-active" : ""}`}
+                        aria-label={`${d} view`}
                       >
-                        {d === "grid" ? "▦" : "≡"}
+                        {d === "grid" ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                        )}
                       </button>
                     ))}
                   </div>
                   {selected.size > 0 && (
-                    <button
-                      onClick={clearSelection}
-                      className="font-mono text-[12px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
-                    >
+                    <button onClick={clearSelection} className="apple-btn">
                       Clear
                     </button>
                   )}
                   <button
                     onClick={copySelected}
                     disabled={filtered.length === 0}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-2 font-display text-xs font-bold text-black shadow-[0_3px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                    className="apple-btn apple-btn-primary"
                   >
-                    <span aria-hidden>⧉</span>
-                    Copy {selected.size > 0 ? selected.size : "all"} · {copyFormat.toUpperCase()}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy {selected.size > 0 ? selected.size : "all"}
                   </button>
                 </div>
               </div>
 
               {flash && (
-                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-400">
-                  ✓ {flash} copied to clipboard
+                <div className="apple-toast mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3.5 py-1.5 text-[13px] font-medium text-emerald-300">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  {flash}
                 </div>
               )}
 
               {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-amber-900/30 bg-[#1c1917]/40 py-16 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg border-2 border-amber-900/40 bg-[#292524] font-mono text-lg text-stone-500">
-                    ∅
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/40">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   </div>
-                  <p className="font-mono text-xs uppercase tracking-widest text-stone-500">
+                  <p className="text-[15px] font-medium text-white/70">
+                    {entries.length === 0 ? "Your vault is empty" : "No matches"}
+                  </p>
+                  <p className="mt-1 text-[13px] text-white/40">
                     {entries.length === 0
-                      ? "Vault empty — mint your first short link"
-                      : "No matches for that search"}
+                      ? "Save your first short link above"
+                      : "Try a different search term"}
                   </p>
                 </div>
               ) : (
                 <div
                   className={
                     density === "grid"
-                      ? "grid gap-4 sm:grid-cols-2"
-                      : "space-y-3"
+                      ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+                      : "space-y-2.5"
                   }
                 >
                   {filtered.map((e) => (
@@ -1224,6 +1219,180 @@ function WorkspaceInner({
           background-size: 18px 18px;
           mask-image: linear-gradient(to bottom, black, transparent 70%);
         }
+
+        /* ── Apple-class Vault surfaces ─────────────────────────────── */
+        .apple-card {
+          border-radius: 20px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.05) inset,
+            0 30px 60px -30px rgba(0,0,0,0.6),
+            0 8px 24px -12px rgba(0,0,0,0.45);
+          backdrop-filter: blur(20px) saturate(140%);
+        }
+        .apple-subtitle {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          letter-spacing: -0.005em;
+        }
+
+        /* Search field */
+        .apple-search { width: 100%; max-width: 320px; }
+        .apple-search-input {
+          width: 100%;
+          height: 36px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.05);
+          padding: 0 44px 0 34px;
+          color: rgba(255,255,255,0.95);
+          font-size: 14px;
+          letter-spacing: -0.005em;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          outline: none;
+          transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+        .apple-search-input::placeholder { color: rgba(255,255,255,0.4); }
+        .apple-search-input:focus {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(245,158,11,0.5);
+          box-shadow: 0 0 0 3px rgba(245,158,11,0.14);
+        }
+
+        /* Toolbar shell */
+        .apple-toolbar {
+          padding: 8px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+        .apple-divider {
+          width: 1px; height: 20px;
+          background: rgba(255,255,255,0.08);
+          margin: 0 4px;
+        }
+        .apple-check {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 4px 10px;
+          font-size: 13px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.8);
+          cursor: pointer; user-select: none;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-check input { accent-color: #f59e0b; width: 15px; height: 15px; }
+        .apple-check:hover { color: #fff; }
+
+        /* Small segmented control */
+        .apple-segment-sm {
+          display: inline-flex; padding: 2px;
+          background: rgba(0,0,0,0.35);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 9px;
+        }
+        .segment-sm {
+          display: inline-flex; align-items: center; justify-content: center;
+          min-width: 32px; height: 26px;
+          padding: 0 10px;
+          font-size: 11.5px; font-weight: 600;
+          letter-spacing: 0.02em;
+          color: rgba(255,255,255,0.55);
+          border-radius: 7px;
+          transition: background 0.15s, color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .segment-sm:hover { color: rgba(255,255,255,0.9); }
+        .segment-sm-active {
+          background: rgba(255,255,255,0.11);
+          color: #fff;
+          box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Primary Apple button */
+        .apple-btn-primary {
+          background: linear-gradient(180deg, #fbbf24, #f59e0b);
+          color: #1a1108;
+          font-weight: 600;
+          border: 1px solid rgba(0,0,0,0.15);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.35) inset,
+            0 6px 16px -6px rgba(245,158,11,0.55);
+        }
+        .apple-btn-primary:hover { background: linear-gradient(180deg, #fcd34d, #fbbf24); }
+        .apple-btn-primary:disabled { opacity: 0.4; }
+
+        /* Icon-only button */
+        .apple-icon-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 28px; height: 28px;
+          border-radius: 8px;
+          color: rgba(255,255,255,0.55);
+          background: transparent;
+          border: 1px solid transparent;
+          transition: background 0.15s, color 0.15s;
+        }
+        .apple-icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        /* Vault card */
+        .vault-card {
+          position: relative; overflow: hidden;
+          border-radius: 16px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.04) inset,
+            0 12px 32px -18px rgba(0,0,0,0.55);
+          transition: transform 0.18s ease, border-color 0.15s, box-shadow 0.2s;
+        }
+        .vault-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255,255,255,0.12);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.05) inset,
+            0 20px 44px -18px rgba(0,0,0,0.7);
+        }
+        .vault-card-selected {
+          border-color: rgba(245,158,11,0.55);
+          box-shadow:
+            0 0 0 3px rgba(245,158,11,0.15),
+            0 16px 40px -18px rgba(245,158,11,0.25);
+        }
+        .vault-card-list { border-radius: 12px; }
+
+        /* Chip buttons */
+        .apple-chip {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 5px 10px;
+          font-size: 12px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.72);
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 8px;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-chip:hover {
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border-color: rgba(255,255,255,0.12);
+        }
+        .apple-chip-primary {
+          color: #fde68a;
+          background: rgba(245,158,11,0.14);
+          border-color: rgba(245,158,11,0.32);
+        }
+        .apple-chip-primary:hover {
+          color: #fef3c7;
+          background: rgba(245,158,11,0.22);
+          border-color: rgba(245,158,11,0.45);
+        }
+        .apple-chip-active {
+          color: #1a1108;
+          background: linear-gradient(180deg, #fbbf24, #f59e0b);
+          border-color: rgba(0,0,0,0.2);
+        }
+        .apple-chip-active:hover { color: #1a1108; }
       `}</style>
     </div>
   );
@@ -1513,34 +1682,28 @@ function VaultCard({
   const isList = density === "list";
 
   return (
-    <div
-      className={`group relative overflow-hidden rounded-lg border-2 bg-[#1c1917] transition-all ${
-        selected
-          ? "border-amber-500/70 shadow-[0_0_0_2px_rgba(245,158,11,0.15),0_8px_0_0_#92400e]"
-          : "border-amber-900/30 hover:border-amber-500/40 hover:-translate-y-0.5"
-      }`}
-    >
+    <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
       {/* Cover */}
       {!isList && (
-        <div className="relative h-36 w-full overflow-hidden border-b-2 border-amber-900/30 bg-[#0f0d0b]">
+        <div className="relative h-40 w-full overflow-hidden bg-[#0f0d0b]">
           {entry.image ? (
             <img
               src={entry.image}
               alt=""
               loading="lazy"
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.05]"
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
               onError={(ev) => {
                 (ev.currentTarget as HTMLImageElement).style.display = "none";
               }}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#292524] to-[#0f0d0b] font-display text-4xl font-extrabold text-amber-900/40">
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/[0.04] to-black/40 apple-title text-[42px] font-semibold text-white/15">
               {entry.title.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#141210] via-[#141210]/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0c0b] via-[#0d0c0b]/40 to-transparent" />
           <label
-            className="absolute left-2 top-2 flex cursor-pointer items-center gap-1 rounded border-2 border-amber-900/40 bg-[#141210]/90 p-1 backdrop-blur"
+            className="absolute left-2.5 top-2.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -1552,24 +1715,24 @@ function VaultCard({
             />
           </label>
           {entry.alias && (
-            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
+            <span className="absolute right-2.5 top-2.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[12px] text-stone-400 backdrop-blur">
+          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
                 alt=""
-                className="h-3.5 w-3.5 rounded-sm"
+                className="h-3.5 w-3.5 rounded-[3px]"
               />
             )}
-            <span className="font-mono font-medium">{hostOf(entry.destination)}</span>
+            <span className="font-medium">{hostOf(entry.destination)}</span>
           </div>
         </div>
       )}
 
-      <div className="p-4">
+      <div className="p-4 sm:p-5">
         <div className="flex items-start gap-3">
           {isList && (
             <>
@@ -1584,7 +1747,7 @@ function VaultCard({
                   className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded border-2 border-amber-900/40 bg-[#0f0d0b]">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0f0d0b]">
                 {entry.image ? (
                   <img
                     src={entry.image}
@@ -1595,7 +1758,7 @@ function VaultCard({
                     }}
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center font-display text-sm font-extrabold text-amber-900/60">
+                  <div className="flex h-full w-full items-center justify-center apple-title text-sm font-semibold text-white/25">
                     {entry.title.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -1603,98 +1766,68 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-amber-50 sm:text-base">
+            <h3 className="apple-title line-clamp-2 text-[15px] font-semibold leading-snug tracking-[-0.01em] text-white sm:text-[16px]">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1.5 block truncate font-mono text-[13px] font-medium text-amber-400 hover:underline"
+              className="mt-1.5 block truncate font-mono text-[12.5px] font-medium text-amber-400/90 hover:text-amber-300"
             >
               {entry.shortUrl}
             </a>
             {isList && entry.alias && (
-              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-500">
+              <span className="mt-1.5 inline-block rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] font-medium text-amber-300">
                 /{entry.alias}
               </span>
             )}
           </div>
           <button
             onClick={onDelete}
-            className="rounded p-1 font-mono text-xs text-stone-600 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+            className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-300"
             title="Delete"
+            aria-label="Delete"
           >
-            ✕
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[13px]">
-          <button
-            onClick={onCopyAll}
-            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
-          >
-            ⧉ Copy all
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <button onClick={onCopyAll} className="apple-chip apple-chip-primary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy all
           </button>
-          <button
-            onClick={() => onCopyField(entry.shortUrl)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-          >
-            Short
-          </button>
-          <button
-            onClick={() => onCopyField(entry.destination)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-          >
-            Dest
-          </button>
+          <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip">Short</button>
+          <button onClick={() => onCopyField(entry.destination)} className="apple-chip">Dest</button>
           {entry.image && (
-            <button
-              onClick={() => onCopyField(entry.image)}
-              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-            >
-              Img
-            </button>
+            <button onClick={() => onCopyField(entry.image)} className="apple-chip">Image</button>
           )}
           <button
             onClick={onToggleQr}
-            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-              qrOpen
-                ? "border-amber-500 bg-amber-500/20 text-amber-300"
-                : "border-amber-900/30 bg-[#0f0d0b] text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
-            }`}
+            className={`apple-chip ml-auto ${qrOpen ? "apple-chip-active" : ""}`}
             title="QR code"
           >
-            ▦ QR
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            QR
           </button>
         </div>
 
         {qrOpen && (
-          <div className="mt-3">
-            <div className="flex items-center gap-3 rounded-lg border-2 border-amber-900/40 bg-[#0f0d0b] p-3">
-              <div className="rounded bg-white p-2">
-                  <QRCodeSVG
-                    value={entry.shortUrl}
-                    size={96}
-                    level="M"
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                  />
+          <div className="mt-3.5 flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+            <div className="rounded-lg bg-white p-2 shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              <QRCodeSVG value={entry.shortUrl} size={92} level="M" bgColor="#ffffff" fgColor="#000000" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11.5px] font-medium uppercase tracking-[0.14em] text-white/40">
+                Scannable link
               </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="font-mono text-[12px] font-bold uppercase tracking-widest text-amber-600">
-                  Scannable short link
-                </div>
-                <div className="truncate font-mono text-[13px] text-amber-400">
-                  {entry.shortUrl}
-                </div>
-                <button
-                  onClick={() => onCopyField(entry.shortUrl)}
-                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[12px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
-                >
-                  Copy link
-                </button>
+              <div className="mt-1 truncate font-mono text-[13px] text-amber-300">
+                {entry.shortUrl}
               </div>
+              <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip mt-2">
+                Copy link
+              </button>
             </div>
           </div>
         )}
