@@ -1571,6 +1571,65 @@ function WorkspaceInner({
           color: #fca5a5;
           background: rgba(239,68,68,0.08);
         }
+
+        /* ── Live status pill ─────────────────────────────────────────── */
+        .live-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 9px;
+          border-radius: 999px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: -0.005em;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.7);
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .live-badge:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #fff; }
+        .live-badge:disabled { cursor: default; }
+        .live-badge-live {
+          color: #86efac;
+          background: rgba(34,197,94,0.10);
+          border-color: rgba(34,197,94,0.28);
+        }
+        .live-badge-broken {
+          color: #fca5a5;
+          background: rgba(239,68,68,0.10);
+          border-color: rgba(239,68,68,0.32);
+        }
+        .live-badge-checking {
+          color: #fcd34d;
+          background: rgba(245,158,11,0.10);
+          border-color: rgba(245,158,11,0.28);
+        }
+        .live-dot {
+          display: inline-block;
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .live-dot-ok {
+          background: #22c55e;
+          box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+          animation: live-pulse-ok 1.8s ease-out infinite;
+        }
+        .live-dot-bad { background: #ef4444; }
+        .live-dot-idle { background: rgba(255,255,255,0.35); }
+        .live-dot-checking {
+          background: #f59e0b;
+          animation: live-spin 0.9s linear infinite;
+          box-shadow: 0 0 0 1.5px rgba(245,158,11,0.35) inset;
+        }
+        @keyframes live-pulse-ok {
+          0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+          70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+        @keyframes live-spin {
+          from { transform: rotate(0deg); opacity: 0.7; }
+          to   { transform: rotate(360deg); opacity: 1; }
+        }
       `}</style>
     </div>
   );
