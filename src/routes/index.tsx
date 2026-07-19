@@ -851,6 +851,15 @@ function WorkspaceInner({
                     className="input flex-1"
                   />
                   <button
+                    type="button"
+                    onClick={pasteDestination}
+                    className="btn-ghost-amber flex items-center gap-1.5 whitespace-nowrap px-4 font-mono text-xs font-bold uppercase tracking-wider"
+                    title="Paste from clipboard"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    Paste
+                  </button>
+                  <button
                     onClick={handleShorten}
                     disabled={busy || !destination.trim()}
                     className="btn-ghost-amber whitespace-nowrap px-5 font-mono text-sm font-bold uppercase tracking-wider disabled:opacity-40"
