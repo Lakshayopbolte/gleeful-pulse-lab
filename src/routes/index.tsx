@@ -1219,6 +1219,180 @@ function WorkspaceInner({
           background-size: 18px 18px;
           mask-image: linear-gradient(to bottom, black, transparent 70%);
         }
+
+        /* ── Apple-class Vault surfaces ─────────────────────────────── */
+        .apple-card {
+          border-radius: 20px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.05) inset,
+            0 30px 60px -30px rgba(0,0,0,0.6),
+            0 8px 24px -12px rgba(0,0,0,0.45);
+          backdrop-filter: blur(20px) saturate(140%);
+        }
+        .apple-subtitle {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          letter-spacing: -0.005em;
+        }
+
+        /* Search field */
+        .apple-search { width: 100%; max-width: 320px; }
+        .apple-search-input {
+          width: 100%;
+          height: 36px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.05);
+          padding: 0 44px 0 34px;
+          color: rgba(255,255,255,0.95);
+          font-size: 14px;
+          letter-spacing: -0.005em;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          outline: none;
+          transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+        }
+        .apple-search-input::placeholder { color: rgba(255,255,255,0.4); }
+        .apple-search-input:focus {
+          background: rgba(255,255,255,0.08);
+          border-color: rgba(245,158,11,0.5);
+          box-shadow: 0 0 0 3px rgba(245,158,11,0.14);
+        }
+
+        /* Toolbar shell */
+        .apple-toolbar {
+          padding: 8px;
+          border-radius: 14px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+        }
+        .apple-divider {
+          width: 1px; height: 20px;
+          background: rgba(255,255,255,0.08);
+          margin: 0 4px;
+        }
+        .apple-check {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 4px 10px;
+          font-size: 13px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.8);
+          cursor: pointer; user-select: none;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-check input { accent-color: #f59e0b; width: 15px; height: 15px; }
+        .apple-check:hover { color: #fff; }
+
+        /* Small segmented control */
+        .apple-segment-sm {
+          display: inline-flex; padding: 2px;
+          background: rgba(0,0,0,0.35);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 9px;
+        }
+        .segment-sm {
+          display: inline-flex; align-items: center; justify-content: center;
+          min-width: 32px; height: 26px;
+          padding: 0 10px;
+          font-size: 11.5px; font-weight: 600;
+          letter-spacing: 0.02em;
+          color: rgba(255,255,255,0.55);
+          border-radius: 7px;
+          transition: background 0.15s, color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .segment-sm:hover { color: rgba(255,255,255,0.9); }
+        .segment-sm-active {
+          background: rgba(255,255,255,0.11);
+          color: #fff;
+          box-shadow: 0 0 0 0.5px rgba(255,255,255,0.08), 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Primary Apple button */
+        .apple-btn-primary {
+          background: linear-gradient(180deg, #fbbf24, #f59e0b);
+          color: #1a1108;
+          font-weight: 600;
+          border: 1px solid rgba(0,0,0,0.15);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.35) inset,
+            0 6px 16px -6px rgba(245,158,11,0.55);
+        }
+        .apple-btn-primary:hover { background: linear-gradient(180deg, #fcd34d, #fbbf24); }
+        .apple-btn-primary:disabled { opacity: 0.4; }
+
+        /* Icon-only button */
+        .apple-icon-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 28px; height: 28px;
+          border-radius: 8px;
+          color: rgba(255,255,255,0.55);
+          background: transparent;
+          border: 1px solid transparent;
+          transition: background 0.15s, color 0.15s;
+        }
+        .apple-icon-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        /* Vault card */
+        .vault-card {
+          position: relative; overflow: hidden;
+          border-radius: 16px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+          border: 1px solid rgba(255,255,255,0.07);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.04) inset,
+            0 12px 32px -18px rgba(0,0,0,0.55);
+          transition: transform 0.18s ease, border-color 0.15s, box-shadow 0.2s;
+        }
+        .vault-card:hover {
+          transform: translateY(-2px);
+          border-color: rgba(255,255,255,0.12);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.05) inset,
+            0 20px 44px -18px rgba(0,0,0,0.7);
+        }
+        .vault-card-selected {
+          border-color: rgba(245,158,11,0.55);
+          box-shadow:
+            0 0 0 3px rgba(245,158,11,0.15),
+            0 16px 40px -18px rgba(245,158,11,0.25);
+        }
+        .vault-card-list { border-radius: 12px; }
+
+        /* Chip buttons */
+        .apple-chip {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 5px 10px;
+          font-size: 12px; font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.72);
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 8px;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+        }
+        .apple-chip:hover {
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border-color: rgba(255,255,255,0.12);
+        }
+        .apple-chip-primary {
+          color: #fde68a;
+          background: rgba(245,158,11,0.14);
+          border-color: rgba(245,158,11,0.32);
+        }
+        .apple-chip-primary:hover {
+          color: #fef3c7;
+          background: rgba(245,158,11,0.22);
+          border-color: rgba(245,158,11,0.45);
+        }
+        .apple-chip-active {
+          color: #1a1108;
+          background: linear-gradient(180deg, #fbbf24, #f59e0b);
+          border-color: rgba(0,0,0,0.2);
+        }
+        .apple-chip-active:hover { color: #1a1108; }
       `}</style>
     </div>
   );
