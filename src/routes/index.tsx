@@ -118,6 +118,73 @@ function WorkspaceInner({
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
 
+  // Bulk import
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number; failed: number }>({ done: 0, total: 0, failed: 0 });
+
+  async function pasteDestination() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) {
+        setStatus({ kind: "error", message: "Clipboard is empty" });
+        return;
+      }
+      setDestination(text.trim());
+      setFlash("Pasted from clipboard");
+      window.setTimeout(() => setFlash((f) => (f === "Pasted from clipboard" ? null : f)), 1400);
+    } catch {
+      setStatus({ kind: "error", message: "Clipboard blocked — allow permission" });
+    }
+  }
+
+  async function handleBulkImport() {
+    const lines = importText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (lines.length === 0) return;
+    setImportBusy(true);
+    setImportProgress({ done: 0, total: lines.length, failed: 0 });
+    let failed = 0;
+    const existing = new Set(entries.map((e) => e.destination.replace(/\/+$/, "").toLowerCase()));
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      // Support "Title | url" or "Title,url" or bare url
+      let t = "";
+      let url = raw;
+      const sep = raw.match(/^(.*?)\s*[|,\t]\s*(https?:\S+|\S+\.\S+.*)$/i);
+      if (sep) { t = sep[1].trim(); url = sep[2].trim(); }
+      const dest = normalizeUrl(url);
+      if (!dest) { failed++; setImportProgress((p) => ({ ...p, done: i + 1, failed })); continue; }
+      const norm = dest.replace(/\/+$/, "").toLowerCase();
+      if (existing.has(norm)) { setImportProgress((p) => ({ ...p, done: i + 1 })); continue; }
+      const finalTitle = t || hostOf(dest);
+      const finalAlias = makeShortAlias(finalTitle);
+      try {
+        const res = await shorten({ data: { url: dest, alias: finalAlias } });
+        const saved = await saveLinkFn({
+          data: {
+            title: finalTitle,
+            alias: finalAlias,
+            destination: dest,
+            image: "",
+            shortUrl: res.shortUrl,
+          },
+        });
+        setEntries((prev) => [saved, ...prev]);
+        existing.add(norm);
+      } catch {
+        failed++;
+      }
+      setImportProgress({ done: i + 1, total: lines.length, failed });
+    }
+    setImportBusy(false);
+    setImportText("");
+    setStatus({ kind: "success", message: `Imported ${lines.length - failed}/${lines.length}` });
+  }
+
   async function loadTrash() {
     setTrashLoading(true);
     try {
