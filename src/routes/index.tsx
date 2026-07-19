@@ -960,110 +960,101 @@ function WorkspaceInner({
           </section>
 
           {/* Vault */}
-          <section className="relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
+          <section className="apple-card relative overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
               <div>
-                <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
+                <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
                   Vault
-                  <span className="ml-2 font-mono text-xs font-medium text-stone-500">
-                    [{String(filtered.length).padStart(2, "0")}
+                  <span className="ml-2.5 text-[15px] font-medium tabular-nums text-white/40">
+                    {filtered.length}
                     {selected.size > 0 && (
-                      <span className="text-amber-500"> / {selected.size} picked</span>
+                      <span className="text-amber-400"> · {selected.size} selected</span>
                     )}
-                    ]
                   </span>
                 </h2>
-                <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
-                  02 · Retrieve
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Your saved short links
                 </p>
               </div>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-600">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <div className="apple-search relative">
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </span>
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   id="vault-search"
-                  placeholder="Search title, alias, url…  ⌘K"
-                  className="input h-11 w-72 text-sm"
-                  style={{ paddingLeft: "2.25rem", paddingRight: "2.25rem" }}
+                  placeholder="Search"
+                  className="apple-search-input"
                 />
-                {query && (
+                {query ? (
                   <button
                     onClick={() => setQuery("")}
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-500 hover:bg-amber-500/10 hover:text-amber-300"
+                    className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white/70 transition hover:bg-white/25 hover:text-white"
                   >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                   </button>
+                ) : (
+                  <kbd className="pointer-events-none absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5 rounded-md border border-white/10 bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10.5px] font-medium text-white/50">⌘K</kbd>
                 )}
               </div>
             </div>
 
-            <div className="p-6 sm:p-8">
+            <div className="p-5 sm:p-7">
               {/* Bulk toolbar */}
-              <div className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border-2 border-amber-900/30 bg-[#1c1917] p-2">
-                <label className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs text-stone-400 hover:text-amber-200">
+              <div className="apple-toolbar mb-6 flex flex-wrap items-center gap-3">
+                <label className="apple-check">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
                     onChange={toggleSelectAll}
                     disabled={filtered.length === 0}
-                    className="accent-amber-500"
                   />
-                  <span className="font-mono font-bold uppercase tracking-widest">
-                    {allVisibleSelected ? "Unselect" : "Select all"}
-                  </span>
+                  <span>{allVisibleSelected ? "Deselect all" : "Select all"}</span>
                 </label>
-                <div className="mx-1 h-5 w-px bg-amber-900/40" />
-                <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                <div className="apple-divider" />
+                <div className="apple-segment-sm">
                   {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
                     <button
                       key={f}
                       onClick={() => setCopyFormat(f)}
-                      className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-                        copyFormat === f
-                          ? "bg-amber-500 text-black"
-                          : "text-stone-500 hover:text-amber-200"
-                      }`}
+                      className={`segment-sm ${copyFormat === f ? "segment-sm-active" : ""}`}
                     >
-                      {f}
+                      {f.toUpperCase()}
                     </button>
                   ))}
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                  <div className="flex items-center gap-0.5 rounded-md border-2 border-amber-900/30 bg-[#0f0d0b] p-0.5">
+                  <div className="apple-segment-sm">
                     {(["grid", "list"] as const).map((d) => (
                       <button
                         key={d}
                         onClick={() => setDensity(d)}
                         title={`${d} view`}
-                        className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
-                          density === d
-                            ? "bg-amber-200 text-black"
-                            : "text-stone-500 hover:text-amber-200"
-                        }`}
+                        className={`segment-sm ${density === d ? "segment-sm-active" : ""}`}
+                        aria-label={`${d} view`}
                       >
-                        {d === "grid" ? "▦" : "≡"}
+                        {d === "grid" ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>
+                        )}
                       </button>
                     ))}
                   </div>
                   {selected.size > 0 && (
-                    <button
-                      onClick={clearSelection}
-                      className="font-mono text-[12px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
-                    >
+                    <button onClick={clearSelection} className="apple-btn">
                       Clear
                     </button>
                   )}
                   <button
                     onClick={copySelected}
                     disabled={filtered.length === 0}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-2 font-display text-xs font-bold text-black shadow-[0_3px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40"
+                    className="apple-btn apple-btn-primary"
                   >
-                    <span aria-hidden>⧉</span>
-                    Copy {selected.size > 0 ? selected.size : "all"} · {copyFormat.toUpperCase()}
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy {selected.size > 0 ? selected.size : "all"}
                   </button>
                 </div>
               </div>
