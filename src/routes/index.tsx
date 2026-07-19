@@ -553,7 +553,7 @@ function WorkspaceInner({
               className={`segment ${view === "vault" ? "segment-active" : ""}`}
             >
               Vault
-              <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+              <span className="ml-1.5 text-[13px] tabular-nums opacity-70">
                 {entries.length}
               </span>
             </button>
@@ -563,7 +563,7 @@ function WorkspaceInner({
             >
               Trash
               {trashCount > 0 && (
-                <span className="ml-1.5 text-[11px] tabular-nums opacity-70">
+                <span className="ml-1.5 text-[13px] tabular-nums opacity-70">
                   {trashCount}
                 </span>
               )}
@@ -614,14 +614,14 @@ function WorkspaceInner({
             <Stat label="With art" value={entries.filter((e) => e.image).length} />
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-2 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 md:flex">
+            <div className="hidden items-center gap-2 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[12px] uppercase tracking-[0.14em] text-stone-500 md:flex">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
               </span>
               Cloud synced
             </div>
-            <div className="hidden items-center gap-1.5 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 lg:flex">
+            <div className="hidden items-center gap-1.5 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[12px] uppercase tracking-[0.14em] text-stone-500 lg:flex">
               <kbd className="rounded border border-amber-900/50 bg-black/60 px-1.5 py-0.5 text-amber-300">⌘</kbd>
               <kbd className="rounded border border-amber-900/50 bg-black/60 px-1.5 py-0.5 text-amber-300">K</kbd>
               <span className="ml-1">search</span>
@@ -641,7 +641,7 @@ function WorkspaceInner({
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <h3 className="font-display text-lg font-extrabold text-amber-50">Bulk import</h3>
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-amber-600/70">
+                <p className="mt-1 font-mono text-[12px] uppercase tracking-[0.14em] text-amber-600/70">
                   One per line · <span className="text-amber-400">Title | url</span> or just url
                 </p>
               </div>
@@ -661,7 +661,7 @@ function WorkspaceInner({
               disabled={importBusy}
             />
             <div className="mt-3 flex items-center justify-between gap-3">
-              <div className="font-mono text-[11px] text-stone-500">
+              <div className="font-mono text-[13px] text-stone-500">
                 {importBusy ? (
                   <>
                     <span className="text-amber-400">{importProgress.done}</span>
@@ -718,7 +718,7 @@ function WorkspaceInner({
               <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
                 New link
               </h2>
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
                 01 · Compose
               </span>
             </div>
@@ -801,7 +801,7 @@ function WorkspaceInner({
                       ✕
                     </button>
                   </div>
-                  <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                  <div className="mb-2 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
                     Click any tile to grab its image link {title || imgQuery ? "& title" : ""}
                   </div>
                   {imgError && (
@@ -838,7 +838,7 @@ function WorkspaceInner({
                               }}
                             />
                           </div>
-                          <div className="border-t border-border/60 px-2 py-1.5 text-[11px] leading-snug text-foreground line-clamp-2 min-h-[2.4rem]">
+                          <div className="border-t border-border/60 px-2 py-1.5 text-[13px] leading-snug text-foreground line-clamp-2 min-h-[2.4rem]">
                             {hit.title}
                           </div>
                         </button>
@@ -883,7 +883,7 @@ function WorkspaceInner({
 
               {shortUrl && (
                 <div className="rounded-lg border border-primary/40 bg-primary/10 p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-primary">
+                  <div className="font-mono text-[12px] uppercase tracking-[0.16em] text-primary">
                     Short URL
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
@@ -912,7 +912,7 @@ function WorkspaceInner({
               )}
               {dupWarning && (
                 <div className="rounded-lg border-2 border-amber-500/50 bg-amber-500/10 p-3">
-                  <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                  <div className="mb-1 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400">
                     ⚠ Duplicate destination
                   </div>
                   <div className="text-xs text-amber-100/90">
@@ -925,7 +925,7 @@ function WorkspaceInner({
                 </div>
               )}
               {status.kind === "success" && (
-                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
+                <p className="font-mono text-[13px] uppercase tracking-[0.14em] text-primary">
                   ✓ {status.message}
                 </p>
               )}
@@ -933,7 +933,7 @@ function WorkspaceInner({
               <div className="flex items-center justify-between pt-4">
                 <button
                   onClick={resetForm}
-                  className="font-mono text-[11px] font-bold uppercase tracking-widest text-stone-500 transition-colors hover:text-red-400"
+                  className="font-mono text-[13px] font-bold uppercase tracking-widest text-stone-500 transition-colors hover:text-red-400"
                 >
                   Clear
                 </button>
@@ -948,7 +948,7 @@ function WorkspaceInner({
                   ) : (
                     <>
                       <span className="text-base sm:text-lg">Shorten &amp; save</span>
-                      <kbd className="flex items-center gap-1 rounded border border-black/10 bg-black/10 px-2 py-1 font-mono text-[10px] font-bold">
+                      <kbd className="flex items-center gap-1 rounded border border-black/10 bg-black/10 px-2 py-1 font-mono text-[12px] font-bold">
                         <span>⌘</span>
                         <span>↵</span>
                       </kbd>
@@ -973,7 +973,7 @@ function WorkspaceInner({
                     ]
                   </span>
                 </h2>
-                <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+                <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
                   02 · Retrieve
                 </p>
               </div>
@@ -1022,7 +1022,7 @@ function WorkspaceInner({
                     <button
                       key={f}
                       onClick={() => setCopyFormat(f)}
-                      className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                      className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
                         copyFormat === f
                           ? "bg-amber-500 text-black"
                           : "text-stone-500 hover:text-amber-200"
@@ -1039,7 +1039,7 @@ function WorkspaceInner({
                         key={d}
                         onClick={() => setDensity(d)}
                         title={`${d} view`}
-                        className={`rounded px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+                        className={`rounded px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
                           density === d
                             ? "bg-amber-200 text-black"
                             : "text-stone-500 hover:text-amber-200"
@@ -1052,7 +1052,7 @@ function WorkspaceInner({
                   {selected.size > 0 && (
                     <button
                       onClick={clearSelection}
-                      className="font-mono text-[10px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
+                      className="font-mono text-[12px] font-bold uppercase tracking-widest text-stone-500 hover:text-red-400"
                     >
                       Clear
                     </button>
@@ -1069,7 +1069,7 @@ function WorkspaceInner({
               </div>
 
               {flash && (
-                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-400">
+                <div className="mb-3 rounded-md border-2 border-amber-500/50 bg-amber-500/10 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-400">
                   ✓ {flash} copied to clipboard
                 </div>
               )}
@@ -1120,7 +1120,7 @@ function WorkspaceInner({
           </>
         )}
 
-        <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-[11px] uppercase tracking-[0.25em] text-muted-foreground sm:flex-row">
+        <footer className="mt-16 flex flex-col items-center justify-between gap-2 border-t border-border/60 pt-6 font-mono text-xs uppercase tracking-[0.16em] text-muted-foreground sm:flex-row">
           <span>FREEKITAAB · workspace</span>
           <span>powered by arolinks</span>
         </footer>
@@ -1187,18 +1187,20 @@ function WorkspaceInner({
 
         .input {
           width: 100%;
-          height: 3rem;
-          border-radius: 0.5rem;
+          height: 3.25rem;
+          border-radius: 0.625rem;
           border: 2px solid rgb(120 53 15 / 0.3);
           background: #1c1917;
           padding: 0 1rem;
           color: rgb(254 243 199);
-          font-size: 0.9rem;
+          font-size: 1rem;
+          line-height: 1.25;
           outline: none;
-          transition: border-color 0.15s;
+          transition: border-color 0.15s, box-shadow 0.15s;
         }
         .input:focus {
           border-color: rgb(245 158 11 / 0.55);
+          box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
         }
         .input::placeholder {
           color: rgb(120 113 108);
@@ -1240,13 +1242,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
+      <div className="mb-2.5 flex items-baseline justify-between">
+        <span className="font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
           {label}
           {required && <span className="ml-1 text-amber-500">*</span>}
         </span>
         {hint && (
-          <span className="font-mono text-[9px] font-medium text-stone-500">
+          <span className="font-mono text-[12px] font-medium text-stone-400">
             {hint}
           </span>
         )}
@@ -1300,14 +1302,14 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
             <div className="font-display text-xl font-extrabold tracking-tight text-amber-50">
               FREEKITAAB
             </div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-amber-600/60">
+            <div className="font-mono text-[12px] uppercase tracking-[0.16em] text-amber-600/60">
               00 · Sign in to the vault
             </div>
           </div>
         </div>
 
         <label className="mb-4 block">
-          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
+          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-600">
             Username
           </div>
           <input
@@ -1319,7 +1321,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
           />
         </label>
         <label className="mb-4 block">
-          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-widest text-amber-600">
+          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-600">
             Password
           </div>
           <input
@@ -1345,7 +1347,7 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
         >
           {busy ? "Unlocking…" : "Unlock vault"}
         </button>
-        <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-widest text-stone-500">
+        <p className="mt-4 text-center font-mono text-[12px] uppercase tracking-widest text-stone-500">
           Username is Lakshay · enter your vault password
         </p>
       </form>
@@ -1359,7 +1361,7 @@ function Stat({ label, value }: { label: string; value: number }) {
       <div className="font-display text-2xl font-bold leading-none text-amber-50 tabular-nums">
         {value}
       </div>
-      <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-amber-500/70">
+      <div className="font-mono text-[13px] font-semibold uppercase tracking-[0.14em] text-amber-500/70">
         {label}
       </div>
     </div>
@@ -1395,7 +1397,7 @@ function TrashPanel({
               [{String(entries.length).padStart(2, "0")}]
             </span>
           </h2>
-          <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600/60">
+          <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
             Deleted items · restore or purge
           </p>
         </div>
@@ -1451,7 +1453,7 @@ function TrashPanel({
                 <div className="line-clamp-1 font-display text-sm font-bold text-amber-50/80">
                   {e.title}
                 </div>
-                <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-stone-500">
+                <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[13px] text-stone-500">
                   {faviconFor(e.destination) && (
                     <img src={faviconFor(e.destination)} alt="" className="h-3 w-3 rounded-sm opacity-60" />
                   )}
@@ -1550,11 +1552,11 @@ function VaultCard({
             />
           </label>
           {entry.alias && (
-            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
+            <span className="absolute right-2 top-2 rounded border-2 border-amber-500/50 bg-[#141210]/90 px-2 py-0.5 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 backdrop-blur">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[10px] text-stone-400 backdrop-blur">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1.5 rounded border border-amber-900/40 bg-[#141210]/80 px-1.5 py-0.5 text-[12px] text-stone-400 backdrop-blur">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
@@ -1601,19 +1603,19 @@ function VaultCard({
             </>
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 font-display text-sm font-bold leading-snug text-amber-50">
+            <h3 className="line-clamp-2 font-display text-[15px] font-bold leading-snug text-amber-50 sm:text-base">
               {entry.title}
             </h3>
             <a
               href={entry.shortUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 block truncate font-mono text-[11px] font-medium text-amber-400 hover:underline"
+              className="mt-1.5 block truncate font-mono text-[13px] font-medium text-amber-400 hover:underline"
             >
               {entry.shortUrl}
             </a>
             {isList && entry.alias && (
-              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-widest text-amber-500">
+              <span className="mt-1 inline-block rounded border border-amber-900/40 bg-[#0f0d0b] px-1.5 py-0.5 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-500">
                 /{entry.alias}
               </span>
             )}
@@ -1627,36 +1629,36 @@ function VaultCard({
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[11px]">
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 text-[13px]">
           <button
             onClick={onCopyAll}
-            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
+            className="inline-flex items-center gap-1 rounded border-2 border-amber-500/50 bg-amber-500/10 px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-amber-400 transition hover:bg-amber-500/20"
           >
             ⧉ Copy all
           </button>
           <button
             onClick={() => onCopyField(entry.shortUrl)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Short
           </button>
           <button
             onClick={() => onCopyField(entry.destination)}
-            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
+            className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
           >
             Dest
           </button>
           {entry.image && (
             <button
               onClick={() => onCopyField(entry.image)}
-              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
+              className="rounded border-2 border-amber-900/30 bg-[#0f0d0b] px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
             >
               Img
             </button>
           )}
           <button
             onClick={onToggleQr}
-            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[10px] font-bold uppercase tracking-widest transition ${
+            className={`ml-auto rounded border-2 px-2 py-1 font-mono text-[12px] font-bold uppercase tracking-widest transition ${
               qrOpen
                 ? "border-amber-500 bg-amber-500/20 text-amber-300"
                 : "border-amber-900/30 bg-[#0f0d0b] text-stone-400 hover:border-amber-500/40 hover:text-amber-200"
@@ -1680,15 +1682,15 @@ function VaultCard({
                   />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                <div className="font-mono text-[12px] font-bold uppercase tracking-widest text-amber-600">
                   Scannable short link
                 </div>
-                <div className="truncate font-mono text-[11px] text-amber-400">
+                <div className="truncate font-mono text-[13px] text-amber-400">
                   {entry.shortUrl}
                 </div>
                 <button
                   onClick={() => onCopyField(entry.shortUrl)}
-                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
+                  className="mt-1 rounded border border-amber-900/40 px-2 py-0.5 font-mono text-[12px] uppercase tracking-widest text-stone-400 hover:text-amber-200"
                 >
                   Copy link
                 </button>
