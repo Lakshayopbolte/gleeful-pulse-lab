@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { QRCodeSVG } from "qrcode.react";
 import { shortenUrl } from "@/lib/shorten.functions";
 import { searchImages, type ImageHit } from "@/lib/image-search.functions";
+import { verifyShortLink } from "@/lib/verify.functions";
 import {
   getGateState,
   unlockSite,
@@ -75,6 +76,7 @@ function WorkspaceInner({
   const runImageSearch = useServerFn(searchImages);
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
+  const verifyFn = useServerFn(verifyShortLink);
   const lockFn = useServerFn(lockSite);
   const getTrashFn = useServerFn(getTrash);
   const restoreLinkFn = useServerFn(restoreLink);
@@ -117,6 +119,40 @@ function WorkspaceInner({
 
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
+
+  // Live status per entry id (in-memory; verified on demand + after save)
+  type LiveStatus = {
+    state: "checking" | "live" | "broken" | "unknown";
+    message?: string;
+    latencyMs?: number;
+    checkedAt?: string;
+  };
+  const [liveStatus, setLiveStatus] = useState<Record<string, LiveStatus>>({});
+
+  async function verifyEntry(id: string, shortUrl: string, destination: string) {
+    if (!shortUrl) return;
+    setLiveStatus((m) => ({ ...m, [id]: { ...(m[id] ?? {}), state: "checking" } }));
+    try {
+      const res = await verifyFn({ data: { shortUrl, destination } });
+      setLiveStatus((m) => ({
+        ...m,
+        [id]: {
+          state: res.status,
+          message: res.message,
+          latencyMs: res.latencyMs,
+          checkedAt: res.checkedAt,
+        },
+      }));
+    } catch (err) {
+      setLiveStatus((m) => ({
+        ...m,
+        [id]: {
+          state: "broken",
+          message: err instanceof Error ? err.message : "Verify failed",
+        },
+      }));
+    }
+  }
 
   // Bulk import
   const [importOpen, setImportOpen] = useState(false);
@@ -408,7 +444,10 @@ function WorkspaceInner({
 
   async function handleSave() {
     const dest = normalizeUrl(destination);
-    if (!title.trim() || !dest) {
+    const titleVal = title.trim();
+    const aliasVal = alias.trim();
+    const imageVal = image.trim();
+    if (!titleVal || !dest) {
       setStatus({ kind: "error", message: "Title and destination are required" });
       return;
     }
@@ -423,25 +462,58 @@ function WorkspaceInner({
       return;
     }
     setDupWarning(null);
-    setStatus({ kind: "saving" });
+
+    // ── Optimistic path: clear the form INSTANTLY and put a placeholder in the vault
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const placeholder: Entry = {
+      id: tempId,
+      title: titleVal,
+      alias: aliasVal,
+      destination: dest,
+      image: imageVal,
+      shortUrl: "",
+      createdAt: Date.now(),
+    } as Entry;
+    setEntries((prev) => [placeholder, ...prev]);
+    setLiveStatus((m) => ({ ...m, [tempId]: { state: "checking", message: "Shortening…" } }));
+    resetForm();
+    setStatus({ kind: "success", message: "Added — shortening in background" });
+
+    // ── Background: shorten → save → verify. Update the placeholder as we go.
     try {
-      // Always mint a fresh short link on save so the record is guaranteed complete
-      const res = await shorten({ data: { url: dest, alias: alias.trim() } });
+      const res = await shorten({ data: { url: dest, alias: aliasVal } });
       const finalShort = res.shortUrl;
-      setShortUrl(finalShort);
+      setLiveStatus((m) => ({
+        ...m,
+        [tempId]: { state: "checking", message: "Saving to cloud…" },
+      }));
       const saved = await saveLinkFn({
         data: {
-          title: title.trim(),
-          alias: alias.trim(),
+          title: titleVal,
+          alias: aliasVal,
           destination: dest,
-          image: image.trim(),
+          image: imageVal,
           shortUrl: finalShort,
         },
       });
-      setEntries((prev) => [saved, ...prev]);
-      resetForm();
-      setStatus({ kind: "success", message: "Saved to cloud" });
+      // Swap placeholder → real row and migrate the status entry.
+      setEntries((prev) => prev.map((e) => (e.id === tempId ? saved : e)));
+      setLiveStatus((m) => {
+        const next = { ...m };
+        delete next[tempId];
+        next[saved.id] = { state: "checking", message: "Verifying link…" };
+        return next;
+      });
+      // Verify (does not block the UI)
+      void verifyEntry(saved.id, saved.shortUrl, saved.destination);
     } catch (err) {
+      // Roll back placeholder on failure
+      setEntries((prev) => prev.filter((e) => e.id !== tempId));
+      setLiveStatus((m) => {
+        const next = { ...m };
+        delete next[tempId];
+        return next;
+      });
       setStatus({
         kind: "error",
         message: err instanceof Error ? err.message : "Failed to save",
@@ -1111,6 +1183,8 @@ function WorkspaceInner({
                       }
                       hostOf={hostOf}
                       faviconFor={faviconFor}
+                      live={liveStatus[e.id]}
+                      onVerify={() => verifyEntry(e.id, e.shortUrl, e.destination)}
                     />
                   ))}
                 </div>
@@ -1497,6 +1571,65 @@ function WorkspaceInner({
           color: #fca5a5;
           background: rgba(239,68,68,0.08);
         }
+
+        /* ── Live status pill ─────────────────────────────────────────── */
+        .live-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 4px 9px;
+          border-radius: 999px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: -0.005em;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.7);
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .live-badge:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #fff; }
+        .live-badge:disabled { cursor: default; }
+        .live-badge-live {
+          color: #86efac;
+          background: rgba(34,197,94,0.10);
+          border-color: rgba(34,197,94,0.28);
+        }
+        .live-badge-broken {
+          color: #fca5a5;
+          background: rgba(239,68,68,0.10);
+          border-color: rgba(239,68,68,0.32);
+        }
+        .live-badge-checking {
+          color: #fcd34d;
+          background: rgba(245,158,11,0.10);
+          border-color: rgba(245,158,11,0.28);
+        }
+        .live-dot {
+          display: inline-block;
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .live-dot-ok {
+          background: #22c55e;
+          box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+          animation: live-pulse-ok 1.8s ease-out infinite;
+        }
+        .live-dot-bad { background: #ef4444; }
+        .live-dot-idle { background: rgba(255,255,255,0.35); }
+        .live-dot-checking {
+          background: #f59e0b;
+          animation: live-spin 0.9s linear infinite;
+          box-shadow: 0 0 0 1.5px rgba(245,158,11,0.35) inset;
+        }
+        @keyframes live-pulse-ok {
+          0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); }
+          70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+        @keyframes live-spin {
+          from { transform: rotate(0deg); opacity: 0.7; }
+          to   { transform: rotate(360deg); opacity: 1; }
+        }
       `}</style>
     </div>
   );
@@ -1766,6 +1899,8 @@ function VaultCard({
   onToggleQr,
   hostOf,
   faviconFor,
+  live,
+  onVerify,
 }: {
   entry: Entry;
   density: "grid" | "list";
@@ -1778,8 +1913,37 @@ function VaultCard({
   onToggleQr: () => void;
   hostOf: (u: string) => string;
   faviconFor: (u: string) => string;
+  live?: {
+    state: "checking" | "live" | "broken" | "unknown";
+    message?: string;
+    latencyMs?: number;
+    checkedAt?: string;
+  };
+  onVerify: () => void;
 }) {
   const isList = density === "list";
+  const state = live?.state ?? "unknown";
+  const dotClass =
+    state === "live"
+      ? "live-dot live-dot-ok"
+      : state === "broken"
+        ? "live-dot live-dot-bad"
+        : state === "checking"
+          ? "live-dot live-dot-checking"
+          : "live-dot live-dot-idle";
+  const stateLabel =
+    state === "live"
+      ? live?.latencyMs
+        ? `Live · ${live.latencyMs}ms`
+        : "Live"
+      : state === "checking"
+        ? live?.message ?? "Checking…"
+        : state === "broken"
+          ? "Broken"
+          : "Not checked";
+  const stateTitle = live?.message
+    ? `${stateLabel} — ${live.message}`
+    : stateLabel;
 
   return (
     <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
@@ -1875,8 +2039,21 @@ function VaultCard({
               rel="noreferrer"
               className="mt-1.5 block truncate font-mono text-[12.5px] font-medium text-amber-400/90 hover:text-amber-300"
             >
-              {entry.shortUrl}
+              {entry.shortUrl || "Shortening…"}
             </a>
+            <button
+              type="button"
+              onClick={onVerify}
+              disabled={!entry.shortUrl || state === "checking"}
+              title={stateTitle}
+              className={`live-badge live-badge-${state} mt-2`}
+            >
+              <span className={dotClass} aria-hidden="true" />
+              <span>{stateLabel}</span>
+              {state !== "checking" && entry.shortUrl && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+              )}
+            </button>
             {isList && entry.alias && (
               <span className="mt-1.5 inline-block rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] font-medium text-amber-300">
                 /{entry.alias}
