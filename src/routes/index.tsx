@@ -1980,8 +1980,21 @@ function VaultCard({
               rel="noreferrer"
               className="mt-1.5 block truncate font-mono text-[12.5px] font-medium text-amber-400/90 hover:text-amber-300"
             >
-              {entry.shortUrl}
+              {entry.shortUrl || "Shortening…"}
             </a>
+            <button
+              type="button"
+              onClick={onVerify}
+              disabled={!entry.shortUrl || state === "checking"}
+              title={stateTitle}
+              className={`live-badge live-badge-${state} mt-2`}
+            >
+              <span className={dotClass} aria-hidden="true" />
+              <span>{stateLabel}</span>
+              {state !== "checking" && entry.shortUrl && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-60"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+              )}
+            </button>
             {isList && entry.alias && (
               <span className="mt-1.5 inline-block rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[11px] font-medium text-amber-300">
                 /{entry.alias}
