@@ -444,7 +444,10 @@ function WorkspaceInner({
 
   async function handleSave() {
     const dest = normalizeUrl(destination);
-    if (!title.trim() || !dest) {
+    const titleVal = title.trim();
+    const aliasVal = alias.trim();
+    const imageVal = image.trim();
+    if (!titleVal || !dest) {
       setStatus({ kind: "error", message: "Title and destination are required" });
       return;
     }
@@ -459,25 +462,58 @@ function WorkspaceInner({
       return;
     }
     setDupWarning(null);
-    setStatus({ kind: "saving" });
+
+    // ── Optimistic path: clear the form INSTANTLY and put a placeholder in the vault
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const placeholder: Entry = {
+      id: tempId,
+      title: titleVal,
+      alias: aliasVal,
+      destination: dest,
+      image: imageVal,
+      shortUrl: "",
+      createdAt: new Date().toISOString(),
+    } as Entry;
+    setEntries((prev) => [placeholder, ...prev]);
+    setLiveStatus((m) => ({ ...m, [tempId]: { state: "checking", message: "Shortening…" } }));
+    resetForm();
+    setStatus({ kind: "success", message: "Added — shortening in background" });
+
+    // ── Background: shorten → save → verify. Update the placeholder as we go.
     try {
-      // Always mint a fresh short link on save so the record is guaranteed complete
-      const res = await shorten({ data: { url: dest, alias: alias.trim() } });
+      const res = await shorten({ data: { url: dest, alias: aliasVal } });
       const finalShort = res.shortUrl;
-      setShortUrl(finalShort);
+      setLiveStatus((m) => ({
+        ...m,
+        [tempId]: { state: "checking", message: "Saving to cloud…" },
+      }));
       const saved = await saveLinkFn({
         data: {
-          title: title.trim(),
-          alias: alias.trim(),
+          title: titleVal,
+          alias: aliasVal,
           destination: dest,
-          image: image.trim(),
+          image: imageVal,
           shortUrl: finalShort,
         },
       });
-      setEntries((prev) => [saved, ...prev]);
-      resetForm();
-      setStatus({ kind: "success", message: "Saved to cloud" });
+      // Swap placeholder → real row and migrate the status entry.
+      setEntries((prev) => prev.map((e) => (e.id === tempId ? saved : e)));
+      setLiveStatus((m) => {
+        const next = { ...m };
+        delete next[tempId];
+        next[saved.id] = { state: "checking", message: "Verifying link…" };
+        return next;
+      });
+      // Verify (does not block the UI)
+      void verifyEntry(saved.id, saved.shortUrl, saved.destination);
     } catch (err) {
+      // Roll back placeholder on failure
+      setEntries((prev) => prev.filter((e) => e.id !== tempId));
+      setLiveStatus((m) => {
+        const next = { ...m };
+        delete next[tempId];
+        return next;
+      });
       setStatus({
         kind: "error",
         message: err instanceof Error ? err.message : "Failed to save",
