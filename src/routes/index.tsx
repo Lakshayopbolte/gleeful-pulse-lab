@@ -1186,6 +1186,13 @@ function WorkspaceInner({
         .apple-btn:active { transform: translateY(0.5px); }
         .apple-btn:disabled { opacity: 0.4; }
         .apple-btn-danger:hover { background: rgba(239,68,68,0.18); color: #fecaca; }
+        .apple-btn-lg {
+          padding: 8px 18px;
+          font-size: 13.5px;
+          font-weight: 600;
+          border-radius: 9px;
+          display: inline-flex; align-items: center; gap: 7px;
+        }
 
         .input {
           width: 100%;
