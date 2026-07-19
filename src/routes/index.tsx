@@ -1183,6 +1183,8 @@ function WorkspaceInner({
                       }
                       hostOf={hostOf}
                       faviconFor={faviconFor}
+                      live={liveStatus[e.id]}
+                      onVerify={() => verifyEntry(e.id, e.shortUrl, e.destination)}
                     />
                   ))}
                 </div>
