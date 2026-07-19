@@ -31,15 +31,42 @@ export const shortenUrl = createServerFn({ method: "POST" })
     if (data.alias) params.set("alias", data.alias);
 
     const apiUrl = `https://arolinks.com/api?${params.toString()}`;
-    const res = await fetch(apiUrl);
+    const res = await fetch(apiUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        Accept: "text/plain, application/json, */*",
+      },
+    });
     const text = (await res.text()).trim();
 
-    if (!res.ok || !text) {
-      throw new Error(`Shortener failed (${res.status})`);
+    // Try to parse a URL out of the response: plain text URL, JSON {shortenedUrl|short|url},
+    // or an error string / HTML block.
+    let short = "";
+    if (/^https?:\/\/\S+$/i.test(text)) {
+      short = text;
+    } else {
+      try {
+        const j = JSON.parse(text);
+        if (j && j.status === "success" && typeof j.shortenedUrl === "string") {
+          short = j.shortenedUrl;
+        } else if (j && typeof j.short === "string") {
+          short = j.short;
+        } else if (j && j.message) {
+          throw new Error(String(j.message).slice(0, 200));
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message && !text.startsWith("{")) {
+          // fall through to generic error below
+        } else if (e instanceof Error) {
+          throw e;
+        }
+      }
     }
-    // Arolinks returns either a short URL or an error string like "error: ..."
-    if (!/^https?:\/\//i.test(text)) {
-      throw new Error(text.slice(0, 200));
+
+    if (!short) {
+      const preview = text ? text.slice(0, 180) : `HTTP ${res.status}`;
+      throw new Error(`Shortener failed: ${preview}`);
     }
-    return { shortUrl: text };
+    return { shortUrl: short };
   });
