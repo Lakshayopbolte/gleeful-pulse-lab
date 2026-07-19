@@ -936,10 +936,10 @@ function WorkspaceInner({
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between gap-3 pt-4">
                 <button
                   onClick={resetForm}
-                  className="font-mono text-[13px] font-bold uppercase tracking-widest text-stone-500 transition-colors hover:text-red-400"
+                  className="apple-btn-ghost"
                 >
                   Clear
                 </button>
@@ -947,17 +947,18 @@ function WorkspaceInner({
                   onClick={handleSave}
                   id="save-btn"
                   disabled={busy || !title.trim() || !destination.trim()}
-                  className="group relative flex items-center gap-3 rounded-lg bg-amber-500 px-6 py-3.5 font-display font-bold text-black shadow-[0_4px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-[0_4px_0_0_#92400e]"
+                  className="apple-cta"
                 >
                   {status.kind === "saving" ? (
-                    <span className="text-base">Shortening & saving…</span>
+                    <>
+                      <span className="apple-cta-spinner" />
+                      <span>Shortening &amp; saving…</span>
+                    </>
                   ) : (
                     <>
-                      <span className="text-base sm:text-lg">Shorten &amp; save</span>
-                      <kbd className="flex items-center gap-1 rounded border border-black/10 bg-black/10 px-2 py-1 font-mono text-[12px] font-bold">
-                        <span>⌘</span>
-                        <span>↵</span>
-                      </kbd>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                      <span>Shorten &amp; save</span>
+                      <kbd className="apple-cta-kbd">⌘ ↵</kbd>
                     </>
                   )}
                 </button>
