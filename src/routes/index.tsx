@@ -1400,6 +1400,96 @@ function WorkspaceInner({
           border-color: rgba(0,0,0,0.2);
         }
         .apple-chip-active:hover { color: #1a1108; }
+
+        /* Enlarged primary chip (Copy everything) */
+        .apple-chip-lg {
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 10px;
+          gap: 7px;
+          letter-spacing: -0.005em;
+        }
+
+        /* Apple-class field label */
+        .apple-field-label {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 13.5px;
+          font-weight: 600;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.88);
+        }
+        .apple-field-hint {
+          font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.4);
+        }
+
+        /* Apple CTA button */
+        .apple-cta {
+          display: inline-flex; align-items: center; gap: 10px;
+          padding: 12px 22px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: #1a1108;
+          background: linear-gradient(180deg, #fcd34d, #f59e0b);
+          border: 1px solid rgba(0,0,0,0.18);
+          border-radius: 12px;
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.4) inset,
+            0 0 0 1px rgba(255,255,255,0.06),
+            0 10px 28px -10px rgba(245,158,11,0.6),
+            0 4px 12px -4px rgba(245,158,11,0.4);
+          transition: transform 0.08s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+        .apple-cta:hover:not(:disabled) {
+          filter: brightness(1.05);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.45) inset,
+            0 0 0 1px rgba(255,255,255,0.08),
+            0 14px 36px -10px rgba(245,158,11,0.75),
+            0 6px 16px -4px rgba(245,158,11,0.5);
+        }
+        .apple-cta:active:not(:disabled) { transform: translateY(1px); }
+        .apple-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+        .apple-cta-kbd {
+          display: inline-flex; align-items: center; gap: 3px;
+          padding: 3px 8px;
+          font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+          font-size: 11.5px; font-weight: 700;
+          color: rgba(26,17,8,0.75);
+          background: rgba(0,0,0,0.12);
+          border: 1px solid rgba(0,0,0,0.15);
+          border-radius: 6px;
+        }
+        .apple-cta-spinner {
+          width: 14px; height: 14px;
+          border-radius: 50%;
+          border: 2px solid rgba(26,17,8,0.25);
+          border-top-color: #1a1108;
+          animation: apple-spin 0.7s linear infinite;
+        }
+        @keyframes apple-spin { to { transform: rotate(360deg); } }
+
+        /* Apple ghost button */
+        .apple-btn-ghost {
+          padding: 10px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.55);
+          background: transparent;
+          border-radius: 10px;
+          transition: color 0.15s, background 0.15s;
+        }
+        .apple-btn-ghost:hover {
+          color: #fca5a5;
+          background: rgba(239,68,68,0.08);
+        }
       `}</style>
     </div>
   );
