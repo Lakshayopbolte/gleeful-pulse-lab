@@ -1840,6 +1840,8 @@ function VaultCard({
   onToggleQr,
   hostOf,
   faviconFor,
+  live,
+  onVerify,
 }: {
   entry: Entry;
   density: "grid" | "list";
@@ -1852,8 +1854,37 @@ function VaultCard({
   onToggleQr: () => void;
   hostOf: (u: string) => string;
   faviconFor: (u: string) => string;
+  live?: {
+    state: "checking" | "live" | "broken" | "unknown";
+    message?: string;
+    latencyMs?: number;
+    checkedAt?: string;
+  };
+  onVerify: () => void;
 }) {
   const isList = density === "list";
+  const state = live?.state ?? "unknown";
+  const dotClass =
+    state === "live"
+      ? "live-dot live-dot-ok"
+      : state === "broken"
+        ? "live-dot live-dot-bad"
+        : state === "checking"
+          ? "live-dot live-dot-checking"
+          : "live-dot live-dot-idle";
+  const stateLabel =
+    state === "live"
+      ? live?.latencyMs
+        ? `Live · ${live.latencyMs}ms`
+        : "Live"
+      : state === "checking"
+        ? live?.message ?? "Checking…"
+        : state === "broken"
+          ? "Broken"
+          : "Not checked";
+  const stateTitle = live?.message
+    ? `${stateLabel} — ${live.message}`
+    : stateLabel;
 
   return (
     <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
