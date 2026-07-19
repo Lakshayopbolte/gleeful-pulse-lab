@@ -985,9 +985,18 @@ function WorkspaceInner({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   id="vault-search"
-                  placeholder="Search  ⌘K"
-                  className="input h-11 w-56 pl-9 text-sm"
+                  placeholder="Search title, alias, url…  ⌘K"
+                  className="input h-11 w-72 pl-9 pr-9 text-sm"
                 />
+                {query && (
+                  <button
+                    onClick={() => setQuery("")}
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-stone-500 hover:bg-amber-500/10 hover:text-amber-300"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                )}
               </div>
             </div>
 
