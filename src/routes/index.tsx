@@ -713,13 +713,19 @@ function WorkspaceInner({
 
         <div className="flex flex-col gap-8">
           {/* Composer */}
-          <section className="composer-card relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center justify-between border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
-              <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
-                New link
-              </h2>
-              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
-                01 · Compose
+          <section className="apple-card relative overflow-hidden">
+            <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
+              <div>
+                <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
+                  Link Box
+                </h2>
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Compose, shorten &amp; save a new link
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-[12px] font-medium text-amber-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+                Live endpoint
               </span>
             </div>
 
