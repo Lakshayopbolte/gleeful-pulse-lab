@@ -605,18 +605,28 @@ function WorkspaceInner({
         ) : (
           <>
         {/* Quick actions bar */}
-        <section className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-900/30 bg-[#141210]/70 px-4 py-3 backdrop-blur">
-          <div className="flex items-center gap-4">
+        <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-900/30 bg-gradient-to-r from-[#161311]/90 via-[#141210]/70 to-[#161311]/90 px-4 py-3 shadow-[inset_0_1px_0_0_rgba(251,191,36,0.05)] backdrop-blur-xl">
+          <div className="flex items-center gap-2">
             <Stat label="Entries" value={entries.length} />
-            <div className="h-8 w-px bg-amber-900/40" />
             <Stat label="Aliased" value={entries.filter((e) => e.alias).length} />
-            <div className="h-8 w-px bg-amber-900/40" />
             <Stat label="With art" value={entries.filter((e) => e.image).length} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 md:flex">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/60"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
+              </span>
+              Cloud synced
+            </div>
+            <div className="hidden items-center gap-1.5 rounded-lg border border-amber-900/30 bg-black/30 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500 lg:flex">
+              <kbd className="rounded border border-amber-900/50 bg-black/60 px-1.5 py-0.5 text-amber-300">⌘</kbd>
+              <kbd className="rounded border border-amber-900/50 bg-black/60 px-1.5 py-0.5 text-amber-300">K</kbd>
+              <span className="ml-1">search</span>
+            </div>
             <button
               onClick={() => setImportOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-md border-2 border-amber-500/60 bg-amber-500/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-widest text-amber-300 transition hover:bg-amber-500/20"
+              className="flex items-center gap-2 rounded-lg border-2 border-amber-500/60 bg-amber-500/10 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-widest text-amber-300 shadow-[0_0_20px_-8px_rgba(251,191,36,0.5)] transition hover:bg-amber-500/20 hover:shadow-[0_0_24px_-6px_rgba(251,191,36,0.6)]"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Import
@@ -1333,11 +1343,11 @@ function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-border bg-background/40 py-2">
-      <div className="font-display text-xl font-semibold text-foreground">
+    <div className="group relative flex min-w-[92px] items-center gap-3 rounded-xl border border-amber-900/40 bg-gradient-to-br from-amber-500/[0.06] to-transparent px-4 py-2.5 transition hover:border-amber-500/50">
+      <div className="font-display text-2xl font-bold leading-none text-amber-50 tabular-nums">
         {value}
       </div>
-      <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+      <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-amber-500/70">
         {label}
       </div>
     </div>
