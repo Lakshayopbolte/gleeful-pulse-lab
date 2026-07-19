@@ -1418,16 +1418,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <span className="font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="apple-field-label">
           {label}
-          {required && <span className="ml-1 text-amber-500">*</span>}
+          {required && <span className="ml-1 text-amber-400">*</span>}
         </span>
-        {hint && (
-          <span className="font-mono text-[12px] font-medium text-stone-400">
-            {hint}
-          </span>
-        )}
+        {hint && <span className="apple-field-hint">{hint}</span>}
       </div>
       {children}
     </label>
