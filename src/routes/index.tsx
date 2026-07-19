@@ -713,13 +713,19 @@ function WorkspaceInner({
 
         <div className="flex flex-col gap-8">
           {/* Composer */}
-          <section className="composer-card relative overflow-hidden rounded-xl border-2 border-amber-900/40 bg-[#141210] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <div className="flex items-center justify-between border-b border-amber-900/20 px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-6">
-              <h2 className="font-display text-2xl font-extrabold tracking-tight text-amber-50 sm:text-3xl">
-                New link
-              </h2>
-              <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-amber-600/60">
-                01 · Compose
+          <section className="apple-card relative overflow-hidden">
+            <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
+              <div>
+                <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
+                  Link Box
+                </h2>
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Compose, shorten &amp; save a new link
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-[12px] font-medium text-amber-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+                Live endpoint
               </span>
             </div>
 
@@ -930,10 +936,10 @@ function WorkspaceInner({
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between gap-3 pt-4">
                 <button
                   onClick={resetForm}
-                  className="font-mono text-[13px] font-bold uppercase tracking-widest text-stone-500 transition-colors hover:text-red-400"
+                  className="apple-btn-ghost"
                 >
                   Clear
                 </button>
@@ -941,17 +947,18 @@ function WorkspaceInner({
                   onClick={handleSave}
                   id="save-btn"
                   disabled={busy || !title.trim() || !destination.trim()}
-                  className="group relative flex items-center gap-3 rounded-lg bg-amber-500 px-6 py-3.5 font-display font-bold text-black shadow-[0_4px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-1 active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-[0_4px_0_0_#92400e]"
+                  className="apple-cta"
                 >
                   {status.kind === "saving" ? (
-                    <span className="text-base">Shortening & saving…</span>
+                    <>
+                      <span className="apple-cta-spinner" />
+                      <span>Shortening &amp; saving…</span>
+                    </>
                   ) : (
                     <>
-                      <span className="text-base sm:text-lg">Shorten &amp; save</span>
-                      <kbd className="flex items-center gap-1 rounded border border-black/10 bg-black/10 px-2 py-1 font-mono text-[12px] font-bold">
-                        <span>⌘</span>
-                        <span>↵</span>
-                      </kbd>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                      <span>Shorten &amp; save</span>
+                      <kbd className="apple-cta-kbd">⌘ ↵</kbd>
                     </>
                   )}
                 </button>
@@ -1051,10 +1058,10 @@ function WorkspaceInner({
                   <button
                     onClick={copySelected}
                     disabled={filtered.length === 0}
-                    className="apple-btn apple-btn-primary"
+                    className="apple-btn apple-btn-primary apple-btn-lg"
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Copy {selected.size > 0 ? selected.size : "all"}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    Copy {selected.size > 0 ? `${selected.size} selected` : "all entries"}
                   </button>
                 </div>
               </div>
@@ -1179,6 +1186,13 @@ function WorkspaceInner({
         .apple-btn:active { transform: translateY(0.5px); }
         .apple-btn:disabled { opacity: 0.4; }
         .apple-btn-danger:hover { background: rgba(239,68,68,0.18); color: #fecaca; }
+        .apple-btn-lg {
+          padding: 8px 18px;
+          font-size: 13.5px;
+          font-weight: 600;
+          border-radius: 9px;
+          display: inline-flex; align-items: center; gap: 7px;
+        }
 
         .input {
           width: 100%;
@@ -1393,6 +1407,96 @@ function WorkspaceInner({
           border-color: rgba(0,0,0,0.2);
         }
         .apple-chip-active:hover { color: #1a1108; }
+
+        /* Enlarged primary chip (Copy everything) */
+        .apple-chip-lg {
+          padding: 8px 16px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 10px;
+          gap: 7px;
+          letter-spacing: -0.005em;
+        }
+
+        /* Apple-class field label */
+        .apple-field-label {
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 13.5px;
+          font-weight: 600;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.88);
+        }
+        .apple-field-hint {
+          font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+          font-size: 12px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.4);
+        }
+
+        /* Apple CTA button */
+        .apple-cta {
+          display: inline-flex; align-items: center; gap: 10px;
+          padding: 12px 22px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: #1a1108;
+          background: linear-gradient(180deg, #fcd34d, #f59e0b);
+          border: 1px solid rgba(0,0,0,0.18);
+          border-radius: 12px;
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.4) inset,
+            0 0 0 1px rgba(255,255,255,0.06),
+            0 10px 28px -10px rgba(245,158,11,0.6),
+            0 4px 12px -4px rgba(245,158,11,0.4);
+          transition: transform 0.08s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+        .apple-cta:hover:not(:disabled) {
+          filter: brightness(1.05);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.45) inset,
+            0 0 0 1px rgba(255,255,255,0.08),
+            0 14px 36px -10px rgba(245,158,11,0.75),
+            0 6px 16px -4px rgba(245,158,11,0.5);
+        }
+        .apple-cta:active:not(:disabled) { transform: translateY(1px); }
+        .apple-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+        .apple-cta-kbd {
+          display: inline-flex; align-items: center; gap: 3px;
+          padding: 3px 8px;
+          font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+          font-size: 11.5px; font-weight: 700;
+          color: rgba(26,17,8,0.75);
+          background: rgba(0,0,0,0.12);
+          border: 1px solid rgba(0,0,0,0.15);
+          border-radius: 6px;
+        }
+        .apple-cta-spinner {
+          width: 14px; height: 14px;
+          border-radius: 50%;
+          border: 2px solid rgba(26,17,8,0.25);
+          border-top-color: #1a1108;
+          animation: apple-spin 0.7s linear infinite;
+        }
+        @keyframes apple-spin { to { transform: rotate(360deg); } }
+
+        /* Apple ghost button */
+        .apple-btn-ghost {
+          padding: 10px 16px;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui;
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: -0.005em;
+          color: rgba(255,255,255,0.55);
+          background: transparent;
+          border-radius: 10px;
+          transition: color 0.15s, background 0.15s;
+        }
+        .apple-btn-ghost:hover {
+          color: #fca5a5;
+          background: rgba(239,68,68,0.08);
+        }
       `}</style>
     </div>
   );
@@ -1411,16 +1515,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-2.5 flex items-baseline justify-between">
-        <span className="font-mono text-[13px] font-bold uppercase tracking-[0.18em] text-amber-400/90">
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="apple-field-label">
           {label}
-          {required && <span className="ml-1 text-amber-500">*</span>}
+          {required && <span className="ml-1 text-amber-400">*</span>}
         </span>
-        {hint && (
-          <span className="font-mono text-[12px] font-medium text-stone-400">
-            {hint}
-          </span>
-        )}
+        {hint && <span className="apple-field-hint">{hint}</span>}
       </div>
       {children}
     </label>
@@ -1794,9 +1894,9 @@ function VaultCard({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <button onClick={onCopyAll} className="apple-chip apple-chip-primary">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy all
+          <button onClick={onCopyAll} className="apple-chip apple-chip-primary apple-chip-lg">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy everything
           </button>
           <button onClick={() => onCopyField(entry.shortUrl)} className="apple-chip">Short</button>
           <button onClick={() => onCopyField(entry.destination)} className="apple-chip">Dest</button>
