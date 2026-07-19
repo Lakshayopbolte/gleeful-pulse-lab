@@ -279,12 +279,14 @@ function WorkspaceInner({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter((e) =>
-      [e.title, e.alias, e.destination, e.shortUrl]
+    const terms = q.split(/\s+/).filter(Boolean);
+    return entries.filter((e) => {
+      const hay = [e.title, e.alias, e.destination, e.shortUrl, hostOf(e.destination)]
+        .filter((v): v is string => typeof v === "string" && v.length > 0)
         .join(" ")
-        .toLowerCase()
-        .includes(q),
-    );
+        .toLowerCase();
+      return terms.every((t) => hay.includes(t));
+    });
   }, [entries, query]);
 
   const selectedEntries = useMemo(
