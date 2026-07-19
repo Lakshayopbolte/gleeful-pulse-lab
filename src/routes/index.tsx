@@ -986,7 +986,8 @@ function WorkspaceInner({
                   onChange={(e) => setQuery(e.target.value)}
                   id="vault-search"
                   placeholder="Search title, alias, url…  ⌘K"
-                  className="input h-11 w-72 pl-9 pr-9 text-sm"
+                  className="input h-11 w-72 text-sm"
+                  style={{ paddingLeft: "2.25rem", paddingRight: "2.25rem" }}
                 />
                 {query && (
                   <button
