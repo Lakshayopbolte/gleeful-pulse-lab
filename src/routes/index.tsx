@@ -568,11 +568,6 @@ function WorkspaceInner({
     }
   }
 
-  async function handleLock() {
-    await lockFn();
-    router.invalidate();
-  }
-
   function copy(text: string) {
     copyText(text, "Value");
   }
