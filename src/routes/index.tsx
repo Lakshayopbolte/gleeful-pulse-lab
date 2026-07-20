@@ -8,8 +8,6 @@ import { searchImages, type ImageHit } from "@/lib/image-search.functions";
 import { verifyShortLink } from "@/lib/verify.functions";
 import {
   getGateState,
-  unlockSite,
-  lockSite,
   saveLink,
   deleteLink,
   getTrash,
@@ -46,17 +44,10 @@ function makeShortAlias(title: string): string {
 }
 
 function Workspace() {
-  const router = useRouter();
   const state = Route.useLoaderData();
-
-  if (!state.unlocked) {
-    return <UnlockScreen onUnlocked={async () => router.invalidate()} />;
-  }
-
   return (
     <WorkspaceInner
-      initialEntries={state.entries}
-      user={state.user}
+      initialEntries={state.entries ?? []}
       initialTrashCount={state.trashCount ?? 0}
     />
   );
@@ -64,11 +55,9 @@ function Workspace() {
 
 function WorkspaceInner({
   initialEntries,
-  user,
   initialTrashCount,
 }: {
   initialEntries: Entry[];
-  user: string;
   initialTrashCount: number;
 }) {
   const router = useRouter();
@@ -77,7 +66,6 @@ function WorkspaceInner({
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
   const verifyFn = useServerFn(verifyShortLink);
-  const lockFn = useServerFn(lockSite);
   const getTrashFn = useServerFn(getTrash);
   const restoreLinkFn = useServerFn(restoreLink);
   const purgeLinkFn = useServerFn(purgeLink);
@@ -580,11 +568,6 @@ function WorkspaceInner({
     }
   }
 
-  async function handleLock() {
-    await lockFn();
-    router.invalidate();
-  }
-
   function copy(text: string) {
     copyText(text, "Value");
   }
@@ -643,12 +626,6 @@ function WorkspaceInner({
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            {user && (
-              <span className="apple-pill hidden sm:inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {user}
-              </span>
-            )}
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
@@ -656,9 +633,6 @@ function WorkspaceInner({
               title="Export JSON"
             >
               Export
-            </button>
-            <button onClick={handleLock} className="apple-btn apple-btn-danger" title="Lock vault">
-              Lock
             </button>
           </div>
         </div>
@@ -1657,103 +1631,6 @@ function Field({
       </div>
       {children}
     </label>
-  );
-}
-
-function UnlockScreen({ onUnlocked }: { onUnlocked: () => Promise<void> }) {
-  const unlockFn = useServerFn(unlockSite);
-  const [username, setUsername] = useState("Lakshay");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!username.trim() || !password) {
-      setError("Enter username and password");
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await unlockFn({ data: { username: username.trim(), password } });
-      if (!res.ok) {
-        setError("Password is wrong. Use the vault password, not the username.");
-        setBusy(false);
-        return;
-      }
-      await onUnlocked();
-      window.location.replace(window.location.pathname);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign in failed");
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center px-6">
-      <form
-        onSubmit={submit}
-        className="w-full max-w-md rounded-xl border-2 border-amber-900/40 bg-[#141210] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
-      >
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500 text-black shadow-[0_4px_0_0_#92400e]">
-            <span className="font-display text-xl font-bold">F</span>
-          </div>
-          <div>
-            <div className="font-display text-xl font-extrabold tracking-tight text-amber-50">
-              FREEKITAAB
-            </div>
-            <div className="font-mono text-[12px] uppercase tracking-[0.16em] text-amber-600/60">
-              00 · Sign in to the vault
-            </div>
-          </div>
-        </div>
-
-        <label className="mb-4 block">
-          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-600">
-            Username
-          </div>
-          <input
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            placeholder="admin"
-            className="w-full rounded-lg border-2 border-amber-900/30 bg-[#1c1917] px-4 py-3 font-mono text-amber-50 outline-none focus:border-amber-500/55"
-          />
-        </label>
-        <label className="mb-4 block">
-          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-widest text-amber-600">
-            Password
-          </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            placeholder="••••••••"
-            className="w-full rounded-lg border-2 border-amber-900/30 bg-[#1c1917] px-4 py-3 font-mono text-amber-50 outline-none focus:border-amber-500/55"
-          />
-        </label>
-
-        {error && (
-          <p className="mb-3 rounded-md border-2 border-red-500/40 bg-red-500/10 px-3 py-2 font-mono text-xs text-red-300">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="w-full rounded-lg bg-amber-500 px-6 py-3.5 font-display font-bold text-black shadow-[0_4px_0_0_#92400e] transition-all hover:bg-amber-400 active:translate-y-1 active:shadow-none disabled:opacity-40"
-        >
-          {busy ? "Unlocking…" : "Unlock vault"}
-        </button>
-        <p className="mt-4 text-center font-mono text-[12px] uppercase tracking-widest text-stone-500">
-          Username is Lakshay · enter your vault password
-        </p>
-      </form>
-    </div>
   );
 }
 
