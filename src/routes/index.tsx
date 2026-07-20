@@ -626,12 +626,6 @@ function WorkspaceInner({
           </div>
 
           <div className="ml-auto flex items-center gap-1.5">
-            {user && (
-              <span className="apple-pill hidden sm:inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {user}
-              </span>
-            )}
             <button
               onClick={exportJson}
               disabled={entries.length === 0}
@@ -639,9 +633,6 @@ function WorkspaceInner({
               title="Export JSON"
             >
               Export
-            </button>
-            <button onClick={handleLock} className="apple-btn apple-btn-danger" title="Lock vault">
-              Lock
             </button>
           </div>
         </div>
