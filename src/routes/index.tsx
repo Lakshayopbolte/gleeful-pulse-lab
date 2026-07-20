@@ -8,8 +8,6 @@ import { searchImages, type ImageHit } from "@/lib/image-search.functions";
 import { verifyShortLink } from "@/lib/verify.functions";
 import {
   getGateState,
-  unlockSite,
-  lockSite,
   saveLink,
   deleteLink,
   getTrash,
@@ -46,17 +44,10 @@ function makeShortAlias(title: string): string {
 }
 
 function Workspace() {
-  const router = useRouter();
   const state = Route.useLoaderData();
-
-  if (!state.unlocked) {
-    return <UnlockScreen onUnlocked={async () => router.invalidate()} />;
-  }
-
   return (
     <WorkspaceInner
-      initialEntries={state.entries}
-      user={state.user}
+      initialEntries={state.entries ?? []}
       initialTrashCount={state.trashCount ?? 0}
     />
   );
@@ -64,11 +55,9 @@ function Workspace() {
 
 function WorkspaceInner({
   initialEntries,
-  user,
   initialTrashCount,
 }: {
   initialEntries: Entry[];
-  user: string;
   initialTrashCount: number;
 }) {
   const router = useRouter();
@@ -77,7 +66,6 @@ function WorkspaceInner({
   const saveLinkFn = useServerFn(saveLink);
   const deleteLinkFn = useServerFn(deleteLink);
   const verifyFn = useServerFn(verifyShortLink);
-  const lockFn = useServerFn(lockSite);
   const getTrashFn = useServerFn(getTrash);
   const restoreLinkFn = useServerFn(restoreLink);
   const purgeLinkFn = useServerFn(purgeLink);
