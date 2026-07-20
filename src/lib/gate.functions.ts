@@ -10,8 +10,6 @@ export type LinkEntry = {
   createdAt: number;
 };
 
-type GateSession = { unlocked?: boolean; user?: string };
-
 function rowToEntry(r: {
   id: string;
   title: string;
