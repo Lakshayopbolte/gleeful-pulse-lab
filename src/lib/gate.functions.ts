@@ -76,11 +76,6 @@ function rowToEntry(r: {
 }
 
 export const getGateState = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await getSession();
-  const bypass = isPreviewHost();
-  if (!session.data.unlocked && !bypass) {
-    return { unlocked: false as const };
-  }
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("links")
@@ -91,7 +86,7 @@ export const getGateState = createServerFn({ method: "GET" }).handler(async () =
   const trashCount = (data ?? []).length - active.length;
   return {
     unlocked: true as const,
-    user: session.data.user ?? (bypass ? "Lakshay" : ""),
+    user: "",
     entries: active.map(rowToEntry),
     trashCount,
   };
@@ -117,8 +112,7 @@ export const lockSite = createServerFn({ method: "POST" }).handler(async () => {
 });
 
 async function requireUnlocked() {
-  const session = await getSession();
-  if (!session.data.unlocked && !isPreviewHost()) throw new Error("Locked");
+  // Auth removed — open workspace.
 }
 
 export const saveLink = createServerFn({ method: "POST" })
