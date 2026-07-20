@@ -1,6 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
-import { createHash, timingSafeEqual } from "node:crypto";
 
 export type LinkEntry = {
   id: string;
@@ -11,32 +9,6 @@ export type LinkEntry = {
   shortUrl: string;
   createdAt: number;
 };
-
-type GateSession = { unlocked?: boolean; user?: string };
-
-function sessionConfig() {
-  return {
-    password: process.env.SESSION_SECRET!,
-    name: "freekitaab-gate",
-    maxAge: 60 * 60 * 24 * 30, // 30 days — stays signed in across browsers/sessions
-    cookie: {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax" as const,
-      path: "/",
-    },
-  };
-}
-
-function passwordMatches(input: string, expected: string) {
-  const a = createHash("sha256").update(input, "utf8").digest();
-  const b = createHash("sha256").update(expected, "utf8").digest();
-  return timingSafeEqual(a, b);
-}
-
-async function getSession() {
-  return useSession<GateSession>(sessionConfig());
-}
 
 function rowToEntry(r: {
   id: string;
@@ -59,39 +31,30 @@ function rowToEntry(r: {
 }
 
 export const getGateState = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("links")
-    .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at")
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  const active = (data ?? []).filter((r) => !r.deleted_at);
-  const trashCount = (data ?? []).length - active.length;
-  return {
-    unlocked: true as const,
-    user: "",
-    entries: active.map(rowToEntry),
-    trashCount,
-  };
-});
-
-export const unlockSite = createServerFn({ method: "POST" })
-  .inputValidator((data: { username: string; password: string }) => data)
-  .handler(async ({ data }) => {
-    const expected = process.env.SITE_PASSWORD;
-    if (!expected) throw new Error("Server is missing SITE_PASSWORD");
-    if (!data.password || !passwordMatches(data.password, expected)) {
-      return { ok: false as const };
-    }
-    const session = await getSession();
-    await session.update({ unlocked: true, user: data.username?.trim() || "guest" });
-    return { ok: true as const };
-  });
-
-export const lockSite = createServerFn({ method: "POST" }).handler(async () => {
-  const session = await getSession();
-  await session.clear();
-  return { ok: true as const };
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("links")
+      .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    const active = (data ?? []).filter((r) => !r.deleted_at);
+    const trashCount = (data ?? []).length - active.length;
+    return {
+      unlocked: true as const,
+      user: "",
+      entries: active.map(rowToEntry),
+      trashCount,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      unlocked: true as const,
+      user: "",
+      entries: [] as LinkEntry[],
+      trashCount: 0,
+    };
+  }
 });
 
 async function requireUnlocked() {
