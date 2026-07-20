@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession, getRequest } from "@tanstack/react-start/server";
+import { useSession } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
 
 export type LinkEntry = {
@@ -36,23 +36,6 @@ function passwordMatches(input: string, expected: string) {
 
 async function getSession() {
   return useSession<GateSession>(sessionConfig());
-}
-
-// Preview / local dev bypass — vault opens without a password on the
-// Lovable preview host or localhost. Published production stays gated.
-function isPreviewHost(): boolean {
-  try {
-    const req = getRequest();
-    const host = req?.headers.get("host") ?? "";
-    return (
-      host.includes("id-preview--") ||
-      host.includes("-dev.lovable.app") ||
-      host.startsWith("localhost") ||
-      host.startsWith("127.0.0.1")
-    );
-  } catch {
-    return false;
-  }
 }
 
 function rowToEntry(r: {
