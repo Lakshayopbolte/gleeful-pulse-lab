@@ -1111,6 +1111,27 @@ function WorkspaceInner({
                     </button>
                   ))}
                 </div>
+                <div className="apple-divider" />
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] uppercase tracking-[0.14em] text-white/40 mr-1">Fields</span>
+                  {ALL_FIELDS.map((f) => {
+                    const on = copyFields.has(f);
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => toggleField(f)}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+                          on
+                            ? "bg-amber-400/15 border-amber-400/40 text-amber-200"
+                            : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80"
+                        }`}
+                        title={on ? `Exclude ${f}` : `Include ${f}`}
+                      >
+                        {f}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="ml-auto flex items-center gap-2">
                   <div className="apple-segment-sm">
                     {(["grid", "list"] as const).map((d) => (
