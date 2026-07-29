@@ -89,6 +89,16 @@ function WorkspaceInner({
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [copyFormat, setCopyFormat] = useState<"json" | "csv" | "markdown" | "text" | "html">("json");
+  type CopyField = "title" | "alias" | "image" | "destination" | "shortUrl";
+  const ALL_FIELDS: CopyField[] = ["title", "alias", "image", "destination", "shortUrl"];
+  const [copyFields, setCopyFields] = useState<Set<CopyField>>(new Set(ALL_FIELDS));
+  const toggleField = (f: CopyField) =>
+    setCopyFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(f)) next.delete(f);
+      else next.add(f);
+      return next;
+    });
   const [flash, setFlash] = useState<string | null>(null);
 
   const [imgQuery, setImgQuery] = useState("");
@@ -341,36 +351,59 @@ function WorkspaceInner({
 
   function formatEntries(list: Entry[], fmt: typeof copyFormat): string {
     if (list.length === 0) return "";
-    if (fmt === "json") return JSON.stringify(list, null, 2);
+    const fields: CopyField[] = ALL_FIELDS.filter((f) => copyFields.has(f));
+    const useFields = fields.length ? fields : ALL_FIELDS;
+    const pick = (e: Entry) => {
+      const o: Record<string, string> = {};
+      for (const f of useFields) o[f] = (e[f] as string) ?? "";
+      return o;
+    };
+    if (fmt === "json") return JSON.stringify(list.map(pick), null, 2);
     if (fmt === "csv") {
       const esc = (v: string) => `"${(v ?? "").replace(/"/g, '""')}"`;
-      const head = ["title", "alias", "image", "destination", "shortUrl"].join(",");
-      const rows = list.map((e) =>
-        [e.title, e.alias, e.image, e.destination, e.shortUrl].map(esc).join(","),
-      );
+      const head = useFields.join(",");
+      const rows = list.map((e) => useFields.map((f) => esc((e[f] as string) ?? "")).join(","));
       return [head, ...rows].join("\n");
     }
     if (fmt === "markdown") {
-      const head = "| Title | Alias | Short | Destination | Image |\n|---|---|---|---|---|";
+      const head =
+        "| " + useFields.join(" | ") + " |\n|" + useFields.map(() => "---").join("|") + "|";
       const rows = list.map(
-        (e) =>
-          `| ${e.title} | \`${e.alias}\` | ${e.shortUrl} | ${e.destination} | ${e.image} |`,
+        (e) => "| " + useFields.map((f) => (e[f] as string) ?? "").join(" | ") + " |",
       );
       return [head, ...rows].join("\n");
     }
     if (fmt === "html") {
       return list
         .map(
-          (e) =>
-            `<a href="${e.shortUrl}" data-alias="${e.alias}" data-image="${e.image}" data-destination="${e.destination}">${e.title}</a>`,
+          (e) => {
+            const attrs = useFields
+              .filter((f) => f !== "title" && f !== "shortUrl")
+              .map((f) => `data-${f}="${(e[f] as string) ?? ""}"`)
+              .join(" ");
+            const href = useFields.includes("shortUrl") ? e.shortUrl : e.destination;
+            const label = useFields.includes("title") ? e.title : href;
+            return `<a href="${href}"${attrs ? " " + attrs : ""}>${label}</a>`;
+          },
         )
         .join("\n");
     }
     // text
+    const labelMap: Record<CopyField, string> = {
+      title: "Title",
+      alias: "Alias",
+      image: "Image",
+      destination: "Destination",
+      shortUrl: "Short",
+    };
+    // If only one field selected, output as a plain list (one per line).
+    if (useFields.length === 1) {
+      const f = useFields[0];
+      return list.map((e) => (e[f] as string) ?? "").join("\n");
+    }
     return list
       .map(
-        (e) =>
-          `Title: ${e.title}\nAlias: ${e.alias}\nImage: ${e.image}\nDestination: ${e.destination}\nShort: ${e.shortUrl}`,
+        (e) => useFields.map((f) => `${labelMap[f]}: ${(e[f] as string) ?? ""}`).join("\n"),
       )
       .join("\n\n---\n\n");
   }
