@@ -16,15 +16,65 @@ export const searchImages = createServerFn({ method: "POST" })
     return { q };
   })
   .handler(async ({ data }): Promise<{ results: ImageHit[] }> => {
-    // Web-wide image search via DuckDuckGo (no key, aggregates from across the web).
-    const ddg = await tryDuckDuckGo(data.q);
-    if (ddg.length > 0) return { results: ddg };
-    // Fallbacks specifically useful for book covers.
-    const gb = await tryGoogleBooks(data.q);
-    if (gb.length > 0) return { results: gb };
-    const ol = await tryOpenLibrary(data.q);
-    return { results: ol };
+    // Run all sources in parallel and merge — much better recall for books.
+    const [ddg, bing, gb, ol] = await Promise.all([
+      tryDuckDuckGo(data.q),
+      tryBing(data.q),
+      tryGoogleBooks(data.q),
+      tryOpenLibrary(data.q),
+    ]);
+    // Interleave web results first (DDG + Bing), then book-specific sources.
+    const merged: ImageHit[] = [];
+    const max = Math.max(ddg.length, bing.length);
+    for (let i = 0; i < max; i++) {
+      if (ddg[i]) merged.push(ddg[i]);
+      if (bing[i]) merged.push(bing[i]);
+    }
+    merged.push(...gb, ...ol);
+    // Dedupe by URL.
+    const seen = new Set<string>();
+    const results = merged.filter((r) => {
+      if (seen.has(r.url)) return false;
+      seen.add(r.url);
+      return true;
+    });
+    return { results: results.slice(0, 120) };
   });
+
+async function tryBing(q: string): Promise<ImageHit[]> {
+  try {
+    const ua =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+    const res = await fetch(
+      `https://www.bing.com/images/async?q=${encodeURIComponent(q + " book cover")}&first=0&count=60&mmasync=1`,
+      { headers: { "User-Agent": ua, Accept: "text/html" } },
+    );
+    if (!res.ok) return [];
+    const html = await res.text();
+    const hits: ImageHit[] = [];
+    const re = /<a class="iusc"[^>]*m="([^"]+)"/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null && hits.length < 60) {
+      try {
+        const meta = JSON.parse(m[1].replace(/&quot;/g, '"'));
+        if (meta.murl && meta.turl) {
+          hits.push({
+            id: `bing-${hits.length}-${meta.murl}`,
+            title: (meta.t || meta.desc || "Untitled").replace(/<[^>]+>/g, "").trim(),
+            url: meta.murl,
+            thumbnail: meta.turl,
+            source: meta.purl ?? "",
+          });
+        }
+      } catch {
+        // skip
+      }
+    }
+    return hits;
+  } catch {
+    return [];
+  }
+}
 
 async function tryDuckDuckGo(q: string): Promise<ImageHit[]> {
   try {
