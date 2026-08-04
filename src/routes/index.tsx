@@ -528,17 +528,31 @@ function WorkspaceInner({
       // Verify (does not block the UI)
       void verifyEntry(saved.id, saved.shortUrl, saved.destination);
     } catch (err) {
-      // Roll back placeholder on failure
+      // Don't lose the data: archive the entry into Trash so it can be retried later.
       setEntries((prev) => prev.filter((e) => e.id !== tempId));
       setLiveStatus((m) => {
         const next = { ...m };
         delete next[tempId];
         return next;
       });
-      setStatus({
-        kind: "error",
-        message: err instanceof Error ? err.message : "Failed to save",
-      });
+      const reason = err instanceof Error ? err.message : "Failed to save";
+      try {
+        const archived = await saveLinkFn({
+          data: {
+            title: titleVal,
+            alias: aliasVal,
+            destination: dest,
+            image: imageVal,
+            shortUrl: "",
+          },
+        });
+        await deleteLinkFn({ data: { id: archived.id } });
+        setTrashCount((c) => c + 1);
+        if (view === "trash") void loadTrash();
+        setStatus({ kind: "error", message: `${reason} — moved to Trash` });
+      } catch {
+        setStatus({ kind: "error", message: reason });
+      }
     }
   }
 
