@@ -23,50 +23,47 @@ export const shortenUrl = createServerFn({ method: "POST" })
     const token = process.env.AROLINKS_API_TOKEN;
     if (!token) throw new Error("Shortener not configured");
 
-    const params = new URLSearchParams({
-      api: token,
-      url: data.url,
-      format: "text",
-    });
-    if (data.alias) params.set("alias", data.alias);
-
-    const apiUrl = `https://arolinks.com/api?${params.toString()}`;
-    const res = await fetch(apiUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
-        Accept: "text/plain, application/json, */*",
-      },
-    });
-    const text = (await res.text()).trim();
-
-    // Try to parse a URL out of the response: plain text URL, JSON {shortenedUrl|short|url},
-    // or an error string / HTML block.
-    let short = "";
-    if (/^https?:\/\/\S+$/i.test(text)) {
-      short = text;
-    } else {
+    // Always use the JSON response: format=text returns an EMPTY 200 body on
+    // errors (e.g. "Alias already exists."), which is unrecoverable to report.
+    async function callApi(alias: string) {
+      const params = new URLSearchParams({ api: token!, url: data.url });
+      if (alias) params.set("alias", alias);
+      const res = await fetch(`https://arolinks.com/api?${params.toString()}`, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+          Accept: "application/json, text/plain, */*",
+        },
+      });
+      const text = (await res.text()).trim();
+      if (/^https?:\/\/\S+$/i.test(text)) return { shortUrl: text, error: "" };
       try {
-        const j = JSON.parse(text);
-        if (j && j.status === "success" && typeof j.shortenedUrl === "string") {
-          short = j.shortenedUrl;
-        } else if (j && typeof j.short === "string") {
-          short = j.short;
-        } else if (j && j.message) {
-          throw new Error(String(j.message).slice(0, 200));
-        }
-      } catch (e) {
-        if (e instanceof Error && e.message && !text.startsWith("{")) {
-          // fall through to generic error below
-        } else if (e instanceof Error) {
-          throw e;
-        }
+        const j = JSON.parse(text) as {
+          status?: string;
+          message?: unknown;
+          shortenedUrl?: string;
+          short?: string;
+        };
+        const url = j.shortenedUrl || j.short || "";
+        if (j.status === "success" && url) return { shortUrl: url, error: "" };
+        const msg = Array.isArray(j.message) ? j.message.join(", ") : String(j.message ?? "");
+        return { shortUrl: "", error: msg || `HTTP ${res.status}` };
+      } catch {
+        return { shortUrl: "", error: text.slice(0, 180) || `HTTP ${res.status}` };
       }
     }
 
-    if (!short) {
-      const preview = text ? text.slice(0, 180) : `HTTP ${res.status}`;
-      throw new Error(`Shortener failed: ${preview}`);
+    let attempt = await callApi(data.alias);
+
+    // Alias collision → retry with short random suffixes, then with no alias.
+    if (!attempt.shortUrl && data.alias && /alias/i.test(attempt.error)) {
+      for (let i = 0; i < 3 && !attempt.shortUrl; i++) {
+        const suffix = Math.random().toString(36).slice(2, 5);
+        attempt = await callApi(`${data.alias.slice(0, 26)}-${suffix}`);
+      }
+      if (!attempt.shortUrl) attempt = await callApi("");
     }
-    return { shortUrl: short };
+
+    if (!attempt.shortUrl) throw new Error(`Shortener failed: ${attempt.error}`);
+    return { shortUrl: attempt.shortUrl };
   });
