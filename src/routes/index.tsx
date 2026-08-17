@@ -812,6 +812,96 @@ function WorkspaceInner({
           />
         ) : (
           <>
+        {exportOpen && (
+          <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="apple-title text-[19px] font-semibold tracking-[-0.01em] text-white">
+                  Export data
+                </h3>
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Choose what to export and which fields to include
+                </p>
+              </div>
+              <button onClick={() => setExportOpen(false)} className="apple-icon-btn" aria-label="Close export">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">What</div>
+                <div className="apple-segment-sm">
+                  {([
+                    ["selected", `Selected (${selected.size})`],
+                    ["filtered", `Search results (${filtered.length})`],
+                    ["all", `Everything (${(view === "cleared" ? clearedEntries : entries).length})`],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      onClick={() => setExportScope(k)}
+                      className={`segment-sm ${exportScope === k ? "segment-sm-active" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">Format</div>
+                <div className="apple-segment-sm">
+                  {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCopyFormat(f)}
+                      className={`segment-sm ${copyFormat === f ? "segment-sm-active" : ""}`}
+                    >
+                      {f.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">Fields</div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {ALL_FIELDS.map((f) => {
+                    const on = copyFields.has(f);
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => toggleField(f)}
+                        className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
+                          on
+                            ? "border-amber-400/40 bg-amber-400/15 text-amber-200"
+                            : "border-white/10 bg-white/[0.03] text-white/50 hover:text-white/80"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() =>
+                      setCopyFields((prev) =>
+                        prev.size === ALL_FIELDS.length ? new Set(["shortUrl"] as const) : new Set(ALL_FIELDS),
+                      )
+                    }
+                    className="apple-btn ml-1"
+                  >
+                    {copyFields.size === ALL_FIELDS.length ? "Only short URL" : "All fields"}
+                  </button>
+                </div>
+              </div>
+              <div className="ml-auto flex items-end gap-2 self-end">
+                <button onClick={copyExport} className="apple-btn apple-btn-lg">Copy</button>
+                <button onClick={downloadExport} className="apple-btn apple-btn-primary apple-btn-lg">
+                  Download file
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {view === "vault" && (<>
         {/* Quick actions bar */}
         <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-900/30 bg-gradient-to-r from-[#161311]/90 via-[#141210]/70 to-[#161311]/90 px-4 py-3 shadow-[inset_0_1px_0_0_rgba(251,191,36,0.05)] backdrop-blur-xl">
           <div className="flex items-center gap-2">
