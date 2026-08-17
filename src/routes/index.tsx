@@ -339,17 +339,18 @@ function WorkspaceInner({
   }, [title, aliasTouched]);
 
   const filtered = useMemo(() => {
+    const source = view === "cleared" ? clearedEntries : entries;
     const q = query.trim().toLowerCase();
-    if (!q) return entries;
+    if (!q) return source;
     const terms = q.split(/\s+/).filter(Boolean);
-    return entries.filter((e) => {
+    return source.filter((e) => {
       const hay = [e.title, e.alias, e.destination, e.shortUrl, hostOf(e.destination)]
         .filter((v): v is string => typeof v === "string" && v.length > 0)
         .join(" ")
         .toLowerCase();
       return terms.every((t) => hay.includes(t));
     });
-  }, [entries, query]);
+  }, [entries, clearedEntries, view, query]);
 
   const selectedEntries = useMemo(
     () => filtered.filter((e) => selected.has(e.id)),
