@@ -14,6 +14,8 @@ import {
   restoreLink,
   purgeLink,
   emptyTrash,
+  setCleared,
+  getCleared,
   type LinkEntry,
 } from "@/lib/gate.functions";
 
@@ -49,6 +51,7 @@ function Workspace() {
     <WorkspaceInner
       initialEntries={state.entries ?? []}
       initialTrashCount={state.trashCount ?? 0}
+      initialClearedCount={state.clearedCount ?? 0}
     />
   );
 }
@@ -56,9 +59,11 @@ function Workspace() {
 function WorkspaceInner({
   initialEntries,
   initialTrashCount,
+  initialClearedCount,
 }: {
   initialEntries: Entry[];
   initialTrashCount: number;
+  initialClearedCount: number;
 }) {
   const router = useRouter();
   const shorten = useServerFn(shortenUrl);
@@ -70,6 +75,8 @@ function WorkspaceInner({
   const restoreLinkFn = useServerFn(restoreLink);
   const purgeLinkFn = useServerFn(purgeLink);
   const emptyTrashFn = useServerFn(emptyTrash);
+  const setClearedFn = useServerFn(setCleared);
+  const getClearedFn = useServerFn(getCleared);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
@@ -110,10 +117,17 @@ function WorkspaceInner({
   const [density, setDensity] = useState<"grid" | "list">("grid");
 
   // Trash / archive
-  const [view, setView] = useState<"vault" | "trash">("vault");
+  const [view, setView] = useState<"vault" | "cleared" | "trash">("vault");
   const [trashCount, setTrashCount] = useState<number>(initialTrashCount);
   const [trashEntries, setTrashEntries] = useState<Entry[]>([]);
   const [trashLoading, setTrashLoading] = useState(false);
+
+  // Cleared (already uploaded) section
+  const [clearedCount, setClearedCount] = useState<number>(initialClearedCount);
+  const [clearedEntries, setClearedEntries] = useState<Entry[]>([]);
+  const [clearedLoading, setClearedLoading] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportScope, setExportScope] = useState<"selected" | "filtered" | "all">("selected");
 
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
