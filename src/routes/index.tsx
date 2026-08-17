@@ -1415,18 +1415,26 @@ function WorkspaceInner({
                 </div>
               )}
 
-              {filtered.length === 0 ? (
+              {view === "cleared" && clearedLoading ? (
+                <div className="py-20 text-center text-[14px] text-white/45">Loading cleared items…</div>
+              ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/40">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   </div>
                   <p className="text-[15px] font-medium text-white/70">
-                    {entries.length === 0 ? "Your vault is empty" : "No matches"}
+                    {query
+                      ? "No matches"
+                      : view === "cleared"
+                        ? "Nothing cleared yet"
+                        : "Your vault is empty"}
                   </p>
                   <p className="mt-1 text-[13px] text-white/40">
-                    {entries.length === 0
-                      ? "Save your first short link above"
-                      : "Try a different search term"}
+                    {query
+                      ? "Try a different search term"
+                      : view === "cleared"
+                        ? "Select entries in the Vault and hit “Mark cleared”"
+                        : "Save your first short link above"}
                   </p>
                 </div>
               ) : (
@@ -1447,6 +1455,10 @@ function WorkspaceInner({
                       onCopyAll={() => copyOne(e)}
                       onCopyField={(v) => copy(v)}
                       onDelete={() => deleteEntry(e.id)}
+                      cleared={view === "cleared"}
+                      onClearToggle={() =>
+                        view === "cleared" ? unclearEntries([e.id]) : clearEntries([e.id])
+                      }
                       qrOpen={qrOpenFor === e.id}
                       onToggleQr={() =>
                         setQrOpenFor((cur) => (cur === e.id ? null : e.id))
