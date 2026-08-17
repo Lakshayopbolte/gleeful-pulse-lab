@@ -602,6 +602,7 @@ function WorkspaceInner({
 
   async function restoreEntry(id: string) {
     const target = trashEntries.find((e) => e.id === id);
+    void target;
     setTrashEntries((p) => p.filter((e) => e.id !== id));
     setTrashCount((c) => Math.max(0, c - 1));
     try {
