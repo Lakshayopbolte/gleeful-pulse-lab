@@ -693,16 +693,45 @@ function WorkspaceInner({
     copyText(text, "Value");
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify(entries, null, 2)], {
-      type: "application/json",
-    });
+  function resolveExportList(): Entry[] {
+    if (exportScope === "selected") return selectedEntries;
+    if (exportScope === "filtered") return filtered;
+    return view === "cleared" ? clearedEntries : entries;
+  }
+
+  const EXPORT_META: Record<typeof copyFormat, { ext: string; mime: string }> = {
+    json: { ext: "json", mime: "application/json" },
+    csv: { ext: "csv", mime: "text/csv" },
+    markdown: { ext: "md", mime: "text/markdown" },
+    text: { ext: "txt", mime: "text/plain" },
+    html: { ext: "html", mime: "text/html" },
+  };
+
+  function downloadExport() {
+    const list = resolveExportList();
+    if (list.length === 0) {
+      setStatus({ kind: "error", message: "Nothing selected to export" });
+      return;
+    }
+    const meta = EXPORT_META[copyFormat];
+    const blob = new Blob([formatEntries(list, copyFormat)], { type: meta.mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `freekitaab-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `freekitaab-${new Date().toISOString().slice(0, 10)}.${meta.ext}`;
     a.click();
     URL.revokeObjectURL(url);
+    setFlash(`Exported ${list.length} × ${meta.ext.toUpperCase()}`);
+    window.setTimeout(() => setFlash(null), 1600);
+  }
+
+  function copyExport() {
+    const list = resolveExportList();
+    if (list.length === 0) {
+      setStatus({ kind: "error", message: "Nothing selected to export" });
+      return;
+    }
+    copyText(formatEntries(list, copyFormat), `${list.length} × ${copyFormat.toUpperCase()}`);
   }
 
   const busy = status.kind === "shortening" || status.kind === "saving";
