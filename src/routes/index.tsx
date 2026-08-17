@@ -763,6 +763,17 @@ function WorkspaceInner({
               </span>
             </button>
             <button
+              onClick={() => { setView("cleared"); setSelected(new Set()); }}
+              className={`segment ${view === "cleared" ? "segment-active" : ""}`}
+            >
+              Cleared
+              {clearedCount > 0 && (
+                <span className="ml-1.5 text-[13px] tabular-nums opacity-70">
+                  {clearedCount}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setView("trash")}
               className={`segment ${view === "trash" ? "segment-active" : ""}`}
             >
@@ -777,10 +788,9 @@ function WorkspaceInner({
 
           <div className="ml-auto flex items-center gap-1.5">
             <button
-              onClick={exportJson}
-              disabled={entries.length === 0}
-              className="apple-btn"
-              title="Export JSON"
+              onClick={() => setExportOpen((v) => !v)}
+              className={`apple-btn ${exportOpen ? "apple-btn-primary" : ""}`}
+              title="Export data"
             >
               Export
             </button>
