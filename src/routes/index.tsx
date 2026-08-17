@@ -1375,7 +1375,26 @@ function WorkspaceInner({
                   </div>
                   {selected.size > 0 && (
                     <button onClick={clearSelection} className="apple-btn">
-                      Clear
+                      Deselect
+                    </button>
+                  )}
+                  {view === "cleared" ? (
+                    <button
+                      onClick={() => unclearEntries(selectedEntries.map((e) => e.id))}
+                      disabled={selected.size === 0}
+                      className="apple-btn apple-btn-lg"
+                      title="Move selected back to the Vault"
+                    >
+                      Back to Vault
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => clearEntries(selectedEntries.map((e) => e.id))}
+                      disabled={selected.size === 0}
+                      className="apple-btn apple-btn-lg"
+                      title="Mark selected as uploaded and move them to Cleared"
+                    >
+                      Mark cleared{selected.size > 0 ? ` (${selected.size})` : ""}
                     </button>
                   )}
                   <button
