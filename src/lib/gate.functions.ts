@@ -35,16 +35,20 @@ export const getGateState = createServerFn({ method: "GET" }).handler(async () =
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("links")
-      .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at")
+      .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at,cleared_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    const active = (data ?? []).filter((r) => !r.deleted_at);
-    const trashCount = (data ?? []).length - active.length;
+    const rows = (data ?? []) as any[];
+    const notDeleted = rows.filter((r) => !r.deleted_at);
+    const active = notDeleted.filter((r) => !r.cleared_at);
+    const trashCount = rows.length - notDeleted.length;
+    const clearedCount = notDeleted.length - active.length;
     return {
       unlocked: true as const,
       user: "",
       entries: active.map(rowToEntry),
       trashCount,
+      clearedCount,
     };
   } catch (error) {
     console.error(error);
@@ -53,6 +57,7 @@ export const getGateState = createServerFn({ method: "GET" }).handler(async () =
       user: "",
       entries: [] as LinkEntry[],
       trashCount: 0,
+      clearedCount: 0,
     };
   }
 });
@@ -149,4 +154,32 @@ export const emptyTrash = createServerFn({ method: "POST" }).handler(async () =>
     .not("deleted_at", "is", null);
   if (error) throw new Error(error.message);
   return { ok: true as const };
+});
+
+/** Mark entries as cleared (already uploaded) — they leave the main dashboard. */
+export const setCleared = createServerFn({ method: "POST" })
+  .inputValidator((data: { ids: string[]; cleared: boolean }) => data)
+  .handler(async ({ data }) => {
+    await requireUnlocked();
+    if (data.ids.length === 0) return { ok: true as const };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("links")
+      .update({ cleared_at: data.cleared ? new Date().toISOString() : null } as never)
+      .in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
+  });
+
+export const getCleared = createServerFn({ method: "GET" }).handler(async () => {
+  await requireUnlocked();
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("links")
+    .select("id,title,alias,destination,image_url,short_url,created_at,deleted_at,cleared_at")
+    .is("deleted_at", null)
+    .not("cleared_at", "is", null)
+    .order("cleared_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as any[]).map(rowToEntry);
 });
