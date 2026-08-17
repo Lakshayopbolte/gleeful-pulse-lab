@@ -1264,12 +1264,14 @@ function WorkspaceInner({
             </div>
           </section>
 
-          {/* Vault */}
+          </>)}
+
+          {/* Vault / Cleared list */}
           <section className="apple-card relative overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
               <div>
                 <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
-                  Vault
+                  {view === "cleared" ? "Cleared" : "Vault"}
                   <span className="ml-2.5 text-[15px] font-medium tabular-nums text-white/40">
                     {filtered.length}
                     {selected.size > 0 && (
@@ -1278,7 +1280,9 @@ function WorkspaceInner({
                   </span>
                 </h2>
                 <p className="apple-subtitle mt-1 text-[13px] text-white/45">
-                  Your saved short links
+                  {view === "cleared"
+                    ? "Already uploaded — kept out of the main dashboard"
+                    : "Your saved short links"}
                 </p>
               </div>
               <div className="apple-search relative">
