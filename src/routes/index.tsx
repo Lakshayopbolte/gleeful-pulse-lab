@@ -1006,8 +1006,10 @@ function WorkspaceInner({
             )}
           </section>
         )}
+        </>)}
 
         <div className="flex flex-col gap-8">
+          {view === "vault" && (<>
           {/* Composer */}
           <section className="apple-card relative overflow-hidden">
             <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
