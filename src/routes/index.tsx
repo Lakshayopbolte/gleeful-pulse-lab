@@ -600,9 +600,53 @@ function WorkspaceInner({
     }
   }
 
+  /** Move entries out of the main dashboard into the Cleared (uploaded) section. */
+  async function clearEntries(ids: string[]) {
+    if (ids.length === 0) return;
+    const moving = entries.filter((e) => ids.includes(e.id));
+    if (moving.length === 0) return;
+    setEntries((p) => p.filter((e) => !ids.includes(e.id)));
+    setClearedEntries((p) => [...moving, ...p]);
+    setClearedCount((c) => c + moving.length);
+    setSelected(new Set());
+    try {
+      await setClearedFn({ data: { ids, cleared: true } });
+      const msg = `${moving.length} moved to Cleared`;
+      setFlash(msg);
+      window.setTimeout(() => setFlash((f) => (f === msg ? null : f)), 1600);
+    } catch {
+      setEntries((p) => [...moving, ...p]);
+      setClearedEntries((p) => p.filter((e) => !ids.includes(e.id)));
+      setClearedCount((c) => Math.max(0, c - moving.length));
+      setStatus({ kind: "error", message: "Couldn't move to Cleared" });
+    }
+  }
+
+  /** Bring cleared entries back to the main dashboard. */
+  async function unclearEntries(ids: string[]) {
+    if (ids.length === 0) return;
+    const moving = clearedEntries.filter((e) => ids.includes(e.id));
+    if (moving.length === 0) return;
+    setClearedEntries((p) => p.filter((e) => !ids.includes(e.id)));
+    setClearedCount((c) => Math.max(0, c - moving.length));
+    setEntries((p) => [...moving, ...p]);
+    setSelected(new Set());
+    try {
+      await setClearedFn({ data: { ids, cleared: false } });
+      const msg = `${moving.length} back in Vault`;
+      setFlash(msg);
+      window.setTimeout(() => setFlash((f) => (f === msg ? null : f)), 1600);
+    } catch {
+      setClearedEntries((p) => [...moving, ...p]);
+      setClearedCount((c) => c + moving.length);
+      setEntries((p) => p.filter((e) => !ids.includes(e.id)));
+      setStatus({ kind: "error", message: "Couldn't restore to Vault" });
+    }
+  }
+
   async function restoreEntry(id: string) {
     const target = trashEntries.find((e) => e.id === id);
-    void target;
+
     setTrashEntries((p) => p.filter((e) => e.id !== id));
     setTrashCount((c) => Math.max(0, c - 1));
     try {
