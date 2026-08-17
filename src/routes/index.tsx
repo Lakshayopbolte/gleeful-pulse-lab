@@ -246,8 +246,22 @@ function WorkspaceInner({
     }
   }
 
+  async function loadCleared() {
+    setClearedLoading(true);
+    try {
+      const list = await getClearedFn();
+      setClearedEntries(list);
+      setClearedCount(list.length);
+    } catch {
+      setStatus({ kind: "error", message: "Couldn't load cleared items" });
+    } finally {
+      setClearedLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (view === "trash") loadTrash();
+    if (view === "cleared") loadCleared();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
