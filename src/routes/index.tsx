@@ -14,6 +14,8 @@ import {
   restoreLink,
   purgeLink,
   emptyTrash,
+  setCleared,
+  getCleared,
   type LinkEntry,
 } from "@/lib/gate.functions";
 
@@ -49,6 +51,7 @@ function Workspace() {
     <WorkspaceInner
       initialEntries={state.entries ?? []}
       initialTrashCount={state.trashCount ?? 0}
+      initialClearedCount={state.clearedCount ?? 0}
     />
   );
 }
@@ -56,9 +59,11 @@ function Workspace() {
 function WorkspaceInner({
   initialEntries,
   initialTrashCount,
+  initialClearedCount,
 }: {
   initialEntries: Entry[];
   initialTrashCount: number;
+  initialClearedCount: number;
 }) {
   const router = useRouter();
   const shorten = useServerFn(shortenUrl);
@@ -70,6 +75,8 @@ function WorkspaceInner({
   const restoreLinkFn = useServerFn(restoreLink);
   const purgeLinkFn = useServerFn(purgeLink);
   const emptyTrashFn = useServerFn(emptyTrash);
+  const setClearedFn = useServerFn(setCleared);
+  const getClearedFn = useServerFn(getCleared);
 
   const [title, setTitle] = useState("");
   const [alias, setAlias] = useState("");
@@ -110,10 +117,17 @@ function WorkspaceInner({
   const [density, setDensity] = useState<"grid" | "list">("grid");
 
   // Trash / archive
-  const [view, setView] = useState<"vault" | "trash">("vault");
+  const [view, setView] = useState<"vault" | "cleared" | "trash">("vault");
   const [trashCount, setTrashCount] = useState<number>(initialTrashCount);
   const [trashEntries, setTrashEntries] = useState<Entry[]>([]);
   const [trashLoading, setTrashLoading] = useState(false);
+
+  // Cleared (already uploaded) section
+  const [clearedCount, setClearedCount] = useState<number>(initialClearedCount);
+  const [clearedEntries, setClearedEntries] = useState<Entry[]>([]);
+  const [clearedLoading, setClearedLoading] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportScope, setExportScope] = useState<"selected" | "filtered" | "all">("selected");
 
   // Duplicate detection
   const [dupWarning, setDupWarning] = useState<Entry | null>(null);
@@ -232,8 +246,22 @@ function WorkspaceInner({
     }
   }
 
+  async function loadCleared() {
+    setClearedLoading(true);
+    try {
+      const list = await getClearedFn();
+      setClearedEntries(list);
+      setClearedCount(list.length);
+    } catch {
+      setStatus({ kind: "error", message: "Couldn't load cleared items" });
+    } finally {
+      setClearedLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (view === "trash") loadTrash();
+    if (view === "cleared") loadCleared();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
@@ -311,17 +339,18 @@ function WorkspaceInner({
   }, [title, aliasTouched]);
 
   const filtered = useMemo(() => {
+    const source = view === "cleared" ? clearedEntries : entries;
     const q = query.trim().toLowerCase();
-    if (!q) return entries;
+    if (!q) return source;
     const terms = q.split(/\s+/).filter(Boolean);
-    return entries.filter((e) => {
+    return source.filter((e) => {
       const hay = [e.title, e.alias, e.destination, e.shortUrl, hostOf(e.destination)]
         .filter((v): v is string => typeof v === "string" && v.length > 0)
         .join(" ")
         .toLowerCase();
       return terms.every((t) => hay.includes(t));
     });
-  }, [entries, query]);
+  }, [entries, clearedEntries, view, query]);
 
   const selectedEntries = useMemo(
     () => filtered.filter((e) => selected.has(e.id)),
@@ -571,8 +600,53 @@ function WorkspaceInner({
     }
   }
 
+  /** Move entries out of the main dashboard into the Cleared (uploaded) section. */
+  async function clearEntries(ids: string[]) {
+    if (ids.length === 0) return;
+    const moving = entries.filter((e) => ids.includes(e.id));
+    if (moving.length === 0) return;
+    setEntries((p) => p.filter((e) => !ids.includes(e.id)));
+    setClearedEntries((p) => [...moving, ...p]);
+    setClearedCount((c) => c + moving.length);
+    setSelected(new Set());
+    try {
+      await setClearedFn({ data: { ids, cleared: true } });
+      const msg = `${moving.length} moved to Cleared`;
+      setFlash(msg);
+      window.setTimeout(() => setFlash((f) => (f === msg ? null : f)), 1600);
+    } catch {
+      setEntries((p) => [...moving, ...p]);
+      setClearedEntries((p) => p.filter((e) => !ids.includes(e.id)));
+      setClearedCount((c) => Math.max(0, c - moving.length));
+      setStatus({ kind: "error", message: "Couldn't move to Cleared" });
+    }
+  }
+
+  /** Bring cleared entries back to the main dashboard. */
+  async function unclearEntries(ids: string[]) {
+    if (ids.length === 0) return;
+    const moving = clearedEntries.filter((e) => ids.includes(e.id));
+    if (moving.length === 0) return;
+    setClearedEntries((p) => p.filter((e) => !ids.includes(e.id)));
+    setClearedCount((c) => Math.max(0, c - moving.length));
+    setEntries((p) => [...moving, ...p]);
+    setSelected(new Set());
+    try {
+      await setClearedFn({ data: { ids, cleared: false } });
+      const msg = `${moving.length} back in Vault`;
+      setFlash(msg);
+      window.setTimeout(() => setFlash((f) => (f === msg ? null : f)), 1600);
+    } catch {
+      setClearedEntries((p) => [...moving, ...p]);
+      setClearedCount((c) => c + moving.length);
+      setEntries((p) => p.filter((e) => !ids.includes(e.id)));
+      setStatus({ kind: "error", message: "Couldn't restore to Vault" });
+    }
+  }
+
   async function restoreEntry(id: string) {
     const target = trashEntries.find((e) => e.id === id);
+
     setTrashEntries((p) => p.filter((e) => e.id !== id));
     setTrashCount((c) => Math.max(0, c - 1));
     try {
@@ -619,16 +693,45 @@ function WorkspaceInner({
     copyText(text, "Value");
   }
 
-  function exportJson() {
-    const blob = new Blob([JSON.stringify(entries, null, 2)], {
-      type: "application/json",
-    });
+  function resolveExportList(): Entry[] {
+    if (exportScope === "selected") return selectedEntries;
+    if (exportScope === "filtered") return filtered;
+    return view === "cleared" ? clearedEntries : entries;
+  }
+
+  const EXPORT_META: Record<typeof copyFormat, { ext: string; mime: string }> = {
+    json: { ext: "json", mime: "application/json" },
+    csv: { ext: "csv", mime: "text/csv" },
+    markdown: { ext: "md", mime: "text/markdown" },
+    text: { ext: "txt", mime: "text/plain" },
+    html: { ext: "html", mime: "text/html" },
+  };
+
+  function downloadExport() {
+    const list = resolveExportList();
+    if (list.length === 0) {
+      setStatus({ kind: "error", message: "Nothing selected to export" });
+      return;
+    }
+    const meta = EXPORT_META[copyFormat];
+    const blob = new Blob([formatEntries(list, copyFormat)], { type: meta.mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `freekitaab-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `freekitaab-${new Date().toISOString().slice(0, 10)}.${meta.ext}`;
     a.click();
     URL.revokeObjectURL(url);
+    setFlash(`Exported ${list.length} × ${meta.ext.toUpperCase()}`);
+    window.setTimeout(() => setFlash(null), 1600);
+  }
+
+  function copyExport() {
+    const list = resolveExportList();
+    if (list.length === 0) {
+      setStatus({ kind: "error", message: "Nothing selected to export" });
+      return;
+    }
+    copyText(formatEntries(list, copyFormat), `${list.length} × ${copyFormat.toUpperCase()}`);
   }
 
   const busy = status.kind === "shortening" || status.kind === "saving";
@@ -660,6 +763,17 @@ function WorkspaceInner({
               </span>
             </button>
             <button
+              onClick={() => { setView("cleared"); setSelected(new Set()); }}
+              className={`segment ${view === "cleared" ? "segment-active" : ""}`}
+            >
+              Cleared
+              {clearedCount > 0 && (
+                <span className="ml-1.5 text-[13px] tabular-nums opacity-70">
+                  {clearedCount}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setView("trash")}
               className={`segment ${view === "trash" ? "segment-active" : ""}`}
             >
@@ -674,10 +788,9 @@ function WorkspaceInner({
 
           <div className="ml-auto flex items-center gap-1.5">
             <button
-              onClick={exportJson}
-              disabled={entries.length === 0}
-              className="apple-btn"
-              title="Export JSON"
+              onClick={() => setExportOpen((v) => !v)}
+              className={`apple-btn ${exportOpen ? "apple-btn-primary" : ""}`}
+              title="Export data"
             >
               Export
             </button>
@@ -699,6 +812,96 @@ function WorkspaceInner({
           />
         ) : (
           <>
+        {exportOpen && (
+          <section className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="apple-title text-[19px] font-semibold tracking-[-0.01em] text-white">
+                  Export data
+                </h3>
+                <p className="apple-subtitle mt-1 text-[13px] text-white/45">
+                  Choose what to export and which fields to include
+                </p>
+              </div>
+              <button onClick={() => setExportOpen(false)} className="apple-icon-btn" aria-label="Close export">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">What</div>
+                <div className="apple-segment-sm">
+                  {([
+                    ["selected", `Selected (${selected.size})`],
+                    ["filtered", `Search results (${filtered.length})`],
+                    ["all", `Everything (${(view === "cleared" ? clearedEntries : entries).length})`],
+                  ] as const).map(([k, label]) => (
+                    <button
+                      key={k}
+                      onClick={() => setExportScope(k)}
+                      className={`segment-sm ${exportScope === k ? "segment-sm-active" : ""}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">Format</div>
+                <div className="apple-segment-sm">
+                  {(["json", "csv", "markdown", "text", "html"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setCopyFormat(f)}
+                      className={`segment-sm ${copyFormat === f ? "segment-sm-active" : ""}`}
+                    >
+                      {f.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="mb-1.5 text-[11.5px] uppercase tracking-[0.14em] text-white/40">Fields</div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {ALL_FIELDS.map((f) => {
+                    const on = copyFields.has(f);
+                    return (
+                      <button
+                        key={f}
+                        onClick={() => toggleField(f)}
+                        className={`rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
+                          on
+                            ? "border-amber-400/40 bg-amber-400/15 text-amber-200"
+                            : "border-white/10 bg-white/[0.03] text-white/50 hover:text-white/80"
+                        }`}
+                      >
+                        {f}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() =>
+                      setCopyFields((prev) =>
+                        prev.size === ALL_FIELDS.length ? new Set(["shortUrl"] as const) : new Set(ALL_FIELDS),
+                      )
+                    }
+                    className="apple-btn ml-1"
+                  >
+                    {copyFields.size === ALL_FIELDS.length ? "Only short URL" : "All fields"}
+                  </button>
+                </div>
+              </div>
+              <div className="ml-auto flex items-end gap-2 self-end">
+                <button onClick={copyExport} className="apple-btn apple-btn-lg">Copy</button>
+                <button onClick={downloadExport} className="apple-btn apple-btn-primary apple-btn-lg">
+                  Download file
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {view === "vault" && (<>
         {/* Quick actions bar */}
         <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-amber-900/30 bg-gradient-to-r from-[#161311]/90 via-[#141210]/70 to-[#161311]/90 px-4 py-3 shadow-[inset_0_1px_0_0_rgba(251,191,36,0.05)] backdrop-blur-xl">
           <div className="flex items-center gap-2">
@@ -803,8 +1006,10 @@ function WorkspaceInner({
             )}
           </section>
         )}
+        </>)}
 
         <div className="flex flex-col gap-8">
+          {view === "vault" && (<>
           {/* Composer */}
           <section className="apple-card relative overflow-hidden">
             <div className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
@@ -1059,12 +1264,14 @@ function WorkspaceInner({
             </div>
           </section>
 
-          {/* Vault */}
+          </>)}
+
+          {/* Vault / Cleared list */}
           <section className="apple-card relative overflow-hidden">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.06] px-6 pt-6 pb-5 sm:px-8 sm:pt-7">
               <div>
                 <h2 className="apple-title text-[26px] font-semibold tracking-[-0.02em] text-white sm:text-[30px]">
-                  Vault
+                  {view === "cleared" ? "Cleared" : "Vault"}
                   <span className="ml-2.5 text-[15px] font-medium tabular-nums text-white/40">
                     {filtered.length}
                     {selected.size > 0 && (
@@ -1073,7 +1280,9 @@ function WorkspaceInner({
                   </span>
                 </h2>
                 <p className="apple-subtitle mt-1 text-[13px] text-white/45">
-                  Your saved short links
+                  {view === "cleared"
+                    ? "Already uploaded — kept out of the main dashboard"
+                    : "Your saved short links"}
                 </p>
               </div>
               <div className="apple-search relative">
@@ -1166,7 +1375,26 @@ function WorkspaceInner({
                   </div>
                   {selected.size > 0 && (
                     <button onClick={clearSelection} className="apple-btn">
-                      Clear
+                      Deselect
+                    </button>
+                  )}
+                  {view === "cleared" ? (
+                    <button
+                      onClick={() => unclearEntries(selectedEntries.map((e) => e.id))}
+                      disabled={selected.size === 0}
+                      className="apple-btn apple-btn-lg"
+                      title="Move selected back to the Vault"
+                    >
+                      Back to Vault
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => clearEntries(selectedEntries.map((e) => e.id))}
+                      disabled={selected.size === 0}
+                      className="apple-btn apple-btn-lg"
+                      title="Mark selected as uploaded and move them to Cleared"
+                    >
+                      Mark cleared{selected.size > 0 ? ` (${selected.size})` : ""}
                     </button>
                   )}
                   <button
@@ -1187,18 +1415,26 @@ function WorkspaceInner({
                 </div>
               )}
 
-              {filtered.length === 0 ? (
+              {view === "cleared" && clearedLoading ? (
+                <div className="py-20 text-center text-[14px] text-white/45">Loading cleared items…</div>
+              ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] py-20 text-center">
                   <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/40">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                   </div>
                   <p className="text-[15px] font-medium text-white/70">
-                    {entries.length === 0 ? "Your vault is empty" : "No matches"}
+                    {query
+                      ? "No matches"
+                      : view === "cleared"
+                        ? "Nothing cleared yet"
+                        : "Your vault is empty"}
                   </p>
                   <p className="mt-1 text-[13px] text-white/40">
-                    {entries.length === 0
-                      ? "Save your first short link above"
-                      : "Try a different search term"}
+                    {query
+                      ? "Try a different search term"
+                      : view === "cleared"
+                        ? "Select entries in the Vault and hit “Mark cleared”"
+                        : "Save your first short link above"}
                   </p>
                 </div>
               ) : (
@@ -1219,6 +1455,10 @@ function WorkspaceInner({
                       onCopyAll={() => copyOne(e)}
                       onCopyField={(v) => copy(v)}
                       onDelete={() => deleteEntry(e.id)}
+                      cleared={view === "cleared"}
+                      onClearToggle={() =>
+                        view === "cleared" ? unclearEntries([e.id]) : clearEntries([e.id])
+                      }
                       qrOpen={qrOpenFor === e.id}
                       onToggleQr={() =>
                         setQrOpenFor((cur) => (cur === e.id ? null : e.id))
@@ -1840,6 +2080,8 @@ function VaultCard({
   onCopyAll,
   onCopyField,
   onDelete,
+  cleared,
+  onClearToggle,
   qrOpen,
   onToggleQr,
   hostOf,
@@ -1854,6 +2096,8 @@ function VaultCard({
   onCopyAll: () => void;
   onCopyField: (v: string) => void;
   onDelete: () => void;
+  cleared?: boolean;
+  onClearToggle?: () => void;
   qrOpen: boolean;
   onToggleQr: () => void;
   hostOf: (u: string) => string;
@@ -1894,25 +2138,35 @@ function VaultCard({
     <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
       {/* Cover */}
       {!isList && (
-        <div className="relative h-40 w-full overflow-hidden bg-[#0f0d0b]">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0b0a09]">
           {entry.image ? (
-            <img
-              src={entry.image}
-              alt=""
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
-              onError={(ev) => {
-                (ev.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <>
+              {/* blurred fill so the full cover can be shown without cropping */}
+              <img
+                src={entry.image}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl"
+              />
+              <img
+                src={entry.image}
+                alt={entry.title}
+                loading="lazy"
+                className="relative z-[1] h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
+                onError={(ev) => {
+                  (ev.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </>
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/[0.04] to-black/40 apple-title text-[42px] font-semibold text-white/15">
               {entry.title.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0c0b] via-[#0d0c0b]/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-[#0d0c0b] via-transparent to-black/30" />
           <label
-            className="absolute left-2.5 top-2.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
+            className="absolute left-2.5 top-2.5 z-[3] flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -1924,11 +2178,11 @@ function VaultCard({
             />
           </label>
           {entry.alias && (
-            <span className="absolute right-2.5 top-2.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
+            <span className="absolute right-2.5 top-2.5 z-[3] rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
+          <div className="absolute bottom-2.5 left-2.5 z-[3] flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
@@ -1956,12 +2210,12 @@ function VaultCard({
                   className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0f0d0b]">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0b0a09]">
                 {entry.image ? (
                   <img
                     src={entry.image}
-                    alt=""
-                    className="h-full w-full object-cover"
+                    alt={entry.title}
+                    className="h-full w-full object-contain p-0.5"
                     onError={(ev) => {
                       (ev.currentTarget as HTMLImageElement).style.display = "none";
                     }}
@@ -2005,6 +2259,18 @@ function VaultCard({
               </span>
             )}
           </div>
+          <button
+            onClick={onClearToggle}
+            className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-emerald-500/15 hover:text-emerald-300"
+            title={cleared ? "Move back to Vault" : "Mark cleared (uploaded)"}
+            aria-label={cleared ? "Move back to Vault" : "Mark cleared"}
+          >
+            {cleared ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            )}
+          </button>
           <button
             onClick={onDelete}
             className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-300"
