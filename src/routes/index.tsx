@@ -2080,6 +2080,8 @@ function VaultCard({
   onCopyAll,
   onCopyField,
   onDelete,
+  cleared,
+  onClearToggle,
   qrOpen,
   onToggleQr,
   hostOf,
@@ -2094,6 +2096,8 @@ function VaultCard({
   onCopyAll: () => void;
   onCopyField: (v: string) => void;
   onDelete: () => void;
+  cleared?: boolean;
+  onClearToggle?: () => void;
   qrOpen: boolean;
   onToggleQr: () => void;
   hostOf: (u: string) => string;
@@ -2134,25 +2138,35 @@ function VaultCard({
     <div className={`vault-card group ${selected ? "vault-card-selected" : ""} ${isList ? "vault-card-list" : ""}`}>
       {/* Cover */}
       {!isList && (
-        <div className="relative h-40 w-full overflow-hidden bg-[#0f0d0b]">
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0b0a09]">
           {entry.image ? (
-            <img
-              src={entry.image}
-              alt=""
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
-              onError={(ev) => {
-                (ev.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
+            <>
+              {/* blurred fill so the full cover can be shown without cropping */}
+              <img
+                src={entry.image}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-2xl"
+              />
+              <img
+                src={entry.image}
+                alt={entry.title}
+                loading="lazy"
+                className="relative z-[1] h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
+                onError={(ev) => {
+                  (ev.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </>
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/[0.04] to-black/40 apple-title text-[42px] font-semibold text-white/15">
               {entry.title.slice(0, 2).toUpperCase()}
             </div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0c0b] via-[#0d0c0b]/40 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-[#0d0c0b] via-transparent to-black/30" />
           <label
-            className="absolute left-2.5 top-2.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
+            className="absolute left-2.5 top-2.5 z-[3] flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-md"
             onClick={(e) => e.stopPropagation()}
           >
             <input
@@ -2164,11 +2178,11 @@ function VaultCard({
             />
           </label>
           {entry.alias && (
-            <span className="absolute right-2.5 top-2.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
+            <span className="absolute right-2.5 top-2.5 z-[3] rounded-full border border-white/15 bg-black/55 px-2.5 py-1 font-mono text-[11px] font-medium text-amber-300 backdrop-blur-md">
               /{entry.alias}
             </span>
           )}
-          <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
+          <div className="absolute bottom-2.5 left-2.5 z-[3] flex items-center gap-1.5 rounded-full border border-white/10 bg-black/55 px-2 py-1 text-[11.5px] text-white/75 backdrop-blur-md">
             {faviconFor(entry.destination) && (
               <img
                 src={faviconFor(entry.destination)}
@@ -2245,6 +2259,18 @@ function VaultCard({
               </span>
             )}
           </div>
+          <button
+            onClick={onClearToggle}
+            className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-emerald-500/15 hover:text-emerald-300"
+            title={cleared ? "Move back to Vault" : "Mark cleared (uploaded)"}
+            aria-label={cleared ? "Move back to Vault" : "Mark cleared"}
+          >
+            {cleared ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            )}
+          </button>
           <button
             onClick={onDelete}
             className="apple-icon-btn opacity-0 transition group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-300"
