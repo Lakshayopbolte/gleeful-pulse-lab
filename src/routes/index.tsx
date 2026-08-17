@@ -2210,12 +2210,12 @@ function VaultCard({
                   className="h-4 w-4 accent-amber-500"
                 />
               </label>
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0f0d0b]">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0b0a09]">
                 {entry.image ? (
                   <img
                     src={entry.image}
-                    alt=""
-                    className="h-full w-full object-cover"
+                    alt={entry.title}
+                    className="h-full w-full object-contain p-0.5"
                     onError={(ev) => {
                       (ev.currentTarget as HTMLImageElement).style.display = "none";
                     }}
